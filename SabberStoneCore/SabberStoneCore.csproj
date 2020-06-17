@@ -1,0 +1,57 @@
+﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+  <PropertyGroup>
+	  <TargetFramework>netcoreapp2.1</TargetFramework>
+	  <Version>2.1.0</Version>
+    <RepositoryUrl>https://github.com/HearthSim/Sabberstone</RepositoryUrl>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <Authors>SabberStone Team, darkfriend77 and rnilva</Authors>
+    <Description>Hearthstone Simulator</Description>
+    <Copyright>GNU AGPL v3</Copyright>
+    <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
+    <Configurations>Debug;Release;NoSpan</Configurations>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <NoWarn>NU1605</NoWarn>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <TreatSpecificWarningsAsErrors />
+    <LangVersion>latest</LangVersion>
+    <Optimize>false</Optimize>
+    <DefineConstants>DEBUG;NETSTANDARD2_0</DefineConstants>
+    <OutputPath>bin\Debug\netstandard2.0\</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='NoSpan|AnyCPU'">
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <TreatSpecificWarningsAsErrors />
+    <LangVersion>latest</LangVersion>
+    <Optimize>false</Optimize>
+    <DefineConstants>NETSTANDARD2_0, NOSPAN</DefineConstants>
+    <OutputPath>bin\Debug\netstandard2.0\</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile></DocumentationFile>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <TreatSpecificWarningsAsErrors />
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <DefineConstants />
+    <NoWarn>1701;1702;0008;0049;</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resources\Data\CardDefs.xml">
+      <LogicalName>SabberStoneCore.Resources.CardDefs.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="resources\Data\PlayErrors.xml">
+      <LogicalName>SabberStoneCore.Resources.PlayErrors.xml</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.5.2" />
+  </ItemGroup>
+</Project>
