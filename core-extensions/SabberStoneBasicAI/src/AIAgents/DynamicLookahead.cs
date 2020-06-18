@@ -7,7 +7,7 @@ using SabberStoneCore.Model.Entities;
 using SabberStoneCore.Enums;
 
 
-namespace SabberStoneBasicAI.AIAgents.MyLookahead
+namespace SabberStoneBasicAI.AIAgents.Lookahead
 {
 	class CustomScore : Score.Score
 	{

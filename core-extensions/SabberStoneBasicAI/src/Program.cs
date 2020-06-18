@@ -51,20 +51,25 @@ namespace SabberStoneBasicAI
 
 		public static void TestTournament()
 		{
-			Agent[] agents = new Agent[2];
-			agents[0] = new Agent(typeof(RandomAgent), "Random Agent");
-			agents[1] = new Agent(typeof(GreedyAgent), "Greedy Agent");
-			//agents[2] = new Agent(typeof(DynamicLookaheadAgent), "Dynamic Lookahead Agent");
-			//agents[3] = new Agent(typeof(BeamSearchAgent), "Beam Search Agent");
+			Agent[] agents = new Agent[] {
+				new Agent(typeof(RandomAgent), "Random Agent"),
+				//new Agent(typeof(GreedyAgent), "Greedy Agent"),
+				//new Agent(typeof(AIAgents.PredatorMCTS.PredatorMCTSAgent), "PredatorMCTSAgent"),
+				//new Agent(typeof(AIAgents.AlvaroAgent.AlvaroAgent), "AlvaroAgent"),
+				//new Agent(typeof(AIAgents.Lookahead.DynamicLookahead), "Lookahead"),
+				//new Agent(typeof(AIAgents.MyLookaheadEnemy.DynamicLookaheadEnemy), "LookaheadEnemy"),
+				new Agent(typeof(AIAgents.MCTSHans.AgentHans), "MCTSHans")
+			};
 
-			CompetitionEvaluation.Deck[] decks = new CompetitionEvaluation.Deck[3];
-			decks[0] = new CompetitionEvaluation.Deck(Decks.RenoKazakusMage, CardClass.MAGE, "Mage");
-			decks[1] = new CompetitionEvaluation.Deck(Decks.AggroPirateWarrior, CardClass.WARRIOR, "Warrior");
-			decks[2] = new CompetitionEvaluation.Deck(Decks.MidrangeJadeShaman, CardClass.SHAMAN, "Shaman");
+			CompetitionEvaluation.Deck[] decks = new CompetitionEvaluation.Deck[] {
+				//new CompetitionEvaluation.Deck(Decks.RenoKazakusMage, CardClass.MAGE, "Mage"),
+				new CompetitionEvaluation.Deck(Decks.AggroPirateWarrior, CardClass.WARRIOR, "Warrior"),
+				//new CompetitionEvaluation.Deck(Decks.MidrangeJadeShaman, CardClass.SHAMAN, "Shaman"),
+			};
 
 			RoundRobinCompetition competition = new RoundRobinCompetition(agents, decks, "results.txt");
-			competition.CreateTasks(100);
-			competition.startEvaluation(8);
+			competition.CreateTasks(2);
+			competition.startEvaluation(1);
 
 			Console.WriteLine("Total Games Played: " + competition.GetTotalGamesPlayed());
 			competition.PrintAgentStats();

@@ -1,7 +1,5 @@
 ﻿using SabberStoneBasicAI.PartialObservation;
-using SabberStoneCore.Actions;
 using SabberStoneCore.Enums;
-using SabberStoneCore.Exceptions;
 using SabberStoneCore.Model;
 using SabberStoneCore.Model.Entities;
 using SabberStoneCore.Model.Zones;
