@@ -1,4 +1,5 @@
-﻿using SabberStoneBasicAI.PartialObservation;
+﻿using SabberStoneBasicAI.AIAgents.AlvaroAgent;
+using SabberStoneBasicAI.PartialObservation;
 using SabberStoneCore.Enums;
 using SabberStoneCore.Model;
 using SabberStoneCore.Model.Entities;
@@ -6,24 +7,150 @@ using SabberStoneCore.Model.Zones;
 using SabberStoneCore.Tasks.PlayerTasks;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Linq;
-using System.Security.Authentication.ExtendedProtection;
+using System.Security.Cryptography.X509Certificates;
+using System.Timers;
 
 namespace SabberStoneBasicAI.AIAgents.MCTSHans
 {
-	class AgentHans : AbstractAgent
+
+	class AgentHansUCB1 : AgentHans
 	{
-		private Stopwatch SW = new Stopwatch();
-		private int maxMilliseconds = 5000;
-		private int maxSimulationDepth = 3;
-		private double EPS = 0.5;
+		public override void setOptions()
+		{
+			UCB1_C = 8000.0;
+			TREE_POLICY = "ucb1";
+			AGENT_NAME = "AgentHansUCB1";
+		}
+	}
+
+
+	class AgentHansEGREEDY7 : AgentHans
+	{
+		public override void setOptions()
+		{
+			EPS = 0.7;
+			TREE_POLICY = "egreedy";
+			AGENT_NAME = "AgentHansEGREEDY7";
+		}
+	}
+
+	class AgentHansEGREEDY5 : AgentHans
+	{
+		public override void setOptions()
+		{
+			EPS = 0.5;
+			TREE_POLICY = "egreedy";
+			AGENT_NAME = "AgentHansEGREEDY5";
+		}
+	}
+
+	class AgentHansEGREEDY3: AgentHans
+	{
+		public override void setOptions()
+		{
+			EPS = 0.3;
+			TREE_POLICY = "egreedy";
+			AGENT_NAME = "AgentHansEGREEDY3";
+		}
+	}
+
+
+	class AgentHansRANDOM : AgentHans
+	{
+		public override void setOptions()
+		{
+			TREE_POLICY = "random";
+			AGENT_NAME = "AgentHansRANDOM";
+		}
+	}
+
+
+	class AgentHansDECAY1 : AgentHans
+	{
+		public override void setOptions()
+		{
+			TREE_POLICY = "decayegreedy";
+			AGENT_NAME = "AgentHansDECAY1";
+		}
+
+		public override void decay()
+		{
+			EPS = Math.Exp(-sw.ElapsedMilliseconds / MAX_MILLISECONDS);
+		}
+	}
+
+	class AgentHansDECAY2 : AgentHans
+	{
+		public override void setOptions()
+		{
+			TREE_POLICY = "decayegreedy";
+			AGENT_NAME = "AgentHansDECAY2";
+		}
+
+		public override void decay()
+		{
+			EPS = Math.Exp(-sw.ElapsedMilliseconds / (MAX_MILLISECONDS/2));
+		}
+	}
+
+	class AgentHansDECAY3 : AgentHans
+	{
+		public override void setOptions()
+		{
+			TREE_POLICY = "decayegreedy";
+			AGENT_NAME = "AgentHansDECAY3";
+		}
+
+		public override void decay()
+		{
+			EPS = Math.Exp(-sw.ElapsedMilliseconds / (MAX_MILLISECONDS / 3));
+		}
+	}
+
+	class AgentHansDECAY4 : AgentHans
+	{
+		public override void setOptions()
+		{
+			TREE_POLICY = "decayegreedy";
+			AGENT_NAME = "AgentHansDECAY4";
+		}
+
+		public override void decay()
+		{
+			EPS = Math.Exp(-sw.ElapsedMilliseconds / (MAX_MILLISECONDS / 4));
+		}
+	}
+
+
+	abstract class AgentHans : AbstractAgent
+	{
+		private bool timeIsOver = false;
 		private int totalVisitedNum = 0;
 		private int numMoves = 0;
+		private Random rnd = new Random();
+		private static Timer timer;
+
+		public Stopwatch sw = new Stopwatch();
+		public double EPS = 0.5;
+		public float MAX_MILLISECONDS = 5000;
+		public int MAX_SIMULATION_DEPTH = 3;
+		public double UCB1_C;
+		public string TREE_POLICY;
+		public string AGENT_NAME = "default";
+
+		public void OnTimedEvent(object source, ElapsedEventArgs e)
+		{
+			timeIsOver = true;
+		}
 
 		public override PlayerTask GetMove(POGame poGame)
 		{
-			SW.Restart();
+			timeIsOver = false;
+			timer.Start();
+			sw.Restart();
 			Controller player = poGame.CurrentPlayer;
 			// Implement a simple Mulligan Rule
 			if (player.MulliganState == Mulligan.INPUT)
@@ -36,70 +163,97 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 		}
 
 
-		public PlayerTask GetMoveMCTS(POGame poGame)
+		public virtual void decay()
 		{
-			Node root = new Node();
-			while(SW.ElapsedMilliseconds < maxMilliseconds)
-			{
-				POGame mctsGame = poGame.getCopy();
-				Node node = Selection(root, ref mctsGame);
-				if(node.parent == null || (node.task != null && node.task.PlayerTaskType != PlayerTaskType.END_TURN))
-				{
-					node = Expansion(node, ref mctsGame);
-					Simulation(node, ref mctsGame);
-					Backpropagation(node, CustomScore.Score(mctsGame, poGame.CurrentPlayer.PlayerId));
-				}
-				else if(node.visitedNum == 0) Backpropagation(node, CustomScore.Score(mctsGame, poGame.CurrentPlayer.PlayerId));
-
-			}
-			Console.WriteLine(root.visitedNum);
-			totalVisitedNum += root.visitedNum;
-			numMoves++;
-			return Policy(root, "greedy").task;
+			EPS = Math.Exp(-sw.ElapsedMilliseconds / MAX_MILLISECONDS);
 		}
 
-		private void Backpropagation(Node node, float value)
+
+		public PlayerTask GetMoveMCTS(POGame poGame)
 		{
-			node.visitedNum++;
+			MCTSNode root = new MCTSNode(poGame);
+			int numSimulation = 0;
+			//stop if confidence in the best node is high enough
+			while(!timeIsOver)
+			{
+				if (TREE_POLICY == "decayegreedy") decay();
+				MCTSNode node = Selection(root);
+				if(node.parent == null || (node.task != null && node.task.PlayerTaskType != PlayerTaskType.END_TURN))
+				{
+					MCTSNode expandedNode = Expansion(ref node);
+					POGame simGame = Simulation(expandedNode);
+					Backpropagation(expandedNode, CustomScore.Score(simGame, poGame.CurrentPlayer.PlayerId));
+				}
+				else if(node.visitsNum == 0) Backpropagation(node, CustomScore.Score(node.poGame, poGame.CurrentPlayer.PlayerId));
+				numSimulation++;
+			}
+			Console.WriteLine(poGame.CurrentOpponent.HandZone.Count + "  " + poGame.CurrentOpponent.DeckZone.Count + "   " + AGENT_NAME);
+			totalVisitedNum += root.visitsNum;
+			numMoves++;
+
+			root.children.Sort((a, b) => a.value.CompareTo(b.value));
+			PlayerTask task = Policy(root, "greedy").task;
+			root = null;
+			return task;
+		}
+
+		public void Backpropagation(MCTSNode node, float value)
+		{
+			node.visitsNum++;
 			node.valuesSum += value;
+			node.value = node.valuesSum / node.visitsNum;
+			if (node.children.Count > 0)
+			{
+				foreach (MCTSNode child in node.children)
+				{
+					child.ucb1 = UCB1(child);
+				}
+				if(TREE_POLICY == "ucb1") node.children.Sort((a, b) => a.ucb1.CompareTo(b.ucb1));
+				else node.children.Sort((a, b) => a.value.CompareTo(b.value));
+			}
 			if (node.parent != null)
 			{
 				Backpropagation(node.parent, value);
 			}
 		}
 
-		public void Simulation(Node node, ref POGame poGame)
+		public double UCB1(MCTSNode node)
 		{
-			if (node.task.PlayerTaskType == PlayerTaskType.END_TURN) return;
-			int depth = maxSimulationDepth;
+			return node.parent!=null?node.value + UCB1_C * Math.Sqrt(2 * Math.Log(node.parent.visitsNum) / (node.visitsNum + 1)):0;
+		}
+
+		public POGame Simulation(MCTSNode node)
+		{
+			if (node.task.PlayerTaskType == PlayerTaskType.END_TURN) return node.poGame;
+			int depth = MAX_SIMULATION_DEPTH;
+			POGame simGame = node.poGame;
 			while (depth > 0)
 			{
-				IEnumerable<KeyValuePair<PlayerTask, POGame>> subactions = poGame.Simulate(poGame.CurrentPlayer.Options()).Where(x => x.Value != null);
-				KeyValuePair<PlayerTask, POGame> action = subactions.RandomElement(new Random());
-				poGame = action.Value;
+				IEnumerable<KeyValuePair<PlayerTask, POGame>> subactions = simGame.Simulate(simGame.CurrentPlayer.Options()).Where(x => x.Value != null);
+				KeyValuePair<PlayerTask, POGame> action = subactions.RandomElement(rnd);
+				simGame = action.Value;
 				depth--;
-				if (action.Key.PlayerTaskType == PlayerTaskType.END_TURN) return;
-			}			
+				if (action.Key.PlayerTaskType == PlayerTaskType.END_TURN) break;
+			}
+			return simGame;
 		}
 
 
-		public Node Expansion(Node node, ref POGame poGame)
+		public MCTSNode Expansion(ref MCTSNode node)
 		{
 			//create all child nodes and select one
-			IEnumerable<KeyValuePair<PlayerTask, POGame>> subactions = poGame.Simulate(poGame.CurrentPlayer.Options()).Where(x => x.Value != null);
+			IEnumerable<KeyValuePair<PlayerTask, POGame>> subactions = node.poGame.Simulate(node.poGame.CurrentPlayer.Options()).Where(x => x.Value != null);
 
 			foreach(KeyValuePair<PlayerTask, POGame> subact in subactions)
 			{
-				Node newNode = new Node(subact.Key, node);
+				MCTSNode newNode = new MCTSNode(node, subact.Key, subact.Value);
+				node.children.Add(newNode);
 				
 			}
-			KeyValuePair<PlayerTask, POGame> action = subactions.RandomElement(new Random());
-			poGame = action.Value;
-			return node.children.First(child => child.task == action.Key);
-
+			return Policy(node, "random");
 		}
 
-		public Node Selection(Node node, ref POGame poGame)
+		public MCTSNode Selection(MCTSNode node)
 		{
 			if (node.children.Count == 0 || (node.task != null && node.task.PlayerTaskType == PlayerTaskType.END_TURN))
 			{
@@ -107,31 +261,30 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 			}
 			else
 			{
-				Node selectedNode = Policy(node, "egreedy");
-				poGame = poGame.Simulate(new List<PlayerTask>() { selectedNode.task }).First().Value;
-				return Selection(selectedNode, ref poGame);
+				MCTSNode selectedNode = Policy(node, TREE_POLICY);
+				return Selection(selectedNode);
 			}
 		}
 
-		public Node Policy(Node node, string policy ="greedy")
+		public MCTSNode Policy(MCTSNode node, string policy="default")
 		{
 			switch (policy)
 			{
-				case "softmax":
-
 				case "egreedy":
-					if (new Random().NextDouble() >= EPS) return node.children.OrderBy(child => child.visitedNum!=0?child.valuesSum / child.visitedNum:0).Last();
-					else return node.children.RandomElement(new Random());
+					if (rnd.NextDouble() >= EPS) return Policy(node, "greedy");
+					else return Policy(node, "random");
 
+				case "ucb1":
 				case "greedy":
-					return node.children.OrderBy(child => child.valuesSum / child.visitedNum).Last();
+					//children are ordered by the backpropagation
+					return node.children[node.children.Count - 1];
 
+				case "random":
 				default:
 					//random
-					return node.children.RandomElement(new Random());
+					return node.children[rnd.Next(node.children.Count)];
 			}
 		}
-
 
 
 		public override void FinalizeAgent()
@@ -140,12 +293,23 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 
 		public override void FinalizeGame()
 		{
-			Console.WriteLine("Avg. Simulations: " + totalVisitedNum/numMoves);
+			Console.WriteLine(AGENT_NAME + " Avg. Simulations: " + totalVisitedNum/numMoves);
 		}
 
 		public override void InitializeAgent()
 		{
+			timer = new System.Timers.Timer
+			{
+				Interval = MAX_MILLISECONDS
+			};
+			timer.Elapsed += OnTimedEvent;
+			timer.AutoReset = true;
+			timer.Enabled = true;
+
+			setOptions();
 		}
+
+		public abstract void setOptions();
 
 		public override void InitializeGame()
 		{
@@ -153,31 +317,39 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 	}
 
 
-	class Node
+	class MCTSNode
 	{
 
-		public Node parent { get; set; }
+		public MCTSNode parent { get; set; }
 
 		public PlayerTask task { get; set; }
 
-		public List<Node> children;
+		public POGame poGame { get; set; }
+
+		public List<MCTSNode> children;
 
 		public float valuesSum { get; set; }
-		public int visitedNum { get; set; }
+		public int visitsNum { get; set; }
 
-		public Node()
+		public float value { get; set; }
+
+		public double ucb1 { get; set; }
+
+
+		public MCTSNode(POGame poGame)
 		{
 			parent = null;
 			task = null;
-			children = new List<Node>();
+			children = new List<MCTSNode>();
+			this.poGame = poGame;
 		}
 
-		public Node(PlayerTask task, Node parent)
+		public MCTSNode(MCTSNode parent, PlayerTask task, POGame poGame)
 		{
 			this.parent = parent;
 			this.task = task;
-			children = new List<Node>();
-			parent.children.Add(this);
+			this.poGame = poGame;
+			children = new List<MCTSNode>();
 		}
 
 	}
@@ -185,6 +357,10 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 
 	class CustomScore : Score.Score
 	{
+		public int HeroArmor => Controller.Hero.Armor;
+
+		public int OpHeroArmor => Controller.Opponent.Hero.Armor;
+
 		readonly double[] scaling = new double[] {
 				21.5,
 				33.6,
@@ -212,23 +388,18 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 
 			double score = 0.0;
 
-			score += scaling[0] * HeroHp;
-			score -= scaling[1] * OpHeroHp;
+			score += scaling[0] * (HeroHp + HeroArmor);
+			score -= scaling[1] * (OpHeroHp + OpHeroArmor);
 
 			score += scaling[2] * BoardZone.Count;
 			score -= scaling[3] * OpBoardZone.Count;
 
-			foreach (Minion boardZoneEntry in BoardZone)
-			{
-				score += scaling[4] * boardZoneEntry.Health;
-				score += scaling[5] * boardZoneEntry.AttackDamage;
-			}
+			score += scaling[4] * MinionTotHealth;
+			score += scaling[5] * MinionTotAtk;
 
-			foreach (Minion boardZoneEntry in OpBoardZone)
-			{
-				score -= scaling[6] * boardZoneEntry.Health;
-				score -= scaling[7] * boardZoneEntry.AttackDamage;
-			}
+			score -= scaling[6] * OpMinionTotHealth;
+			score -= scaling[7] * OpMinionTotAtk;
+			//MinionTotHealthTaunt OpMinionTotHealthTaunt
 
 			return (int)Math.Round(score);
 		}

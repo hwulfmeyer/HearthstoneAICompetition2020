@@ -5,7 +5,7 @@ using SabberStoneBasicAI.PartialObservation;
 using SabberStoneCore.Tasks.PlayerTasks;
 using SabberStoneCore.Model.Entities;
 using SabberStoneCore.Enums;
-
+using System.Timers;
 
 namespace SabberStoneBasicAI.AIAgents.Lookahead
 {
@@ -62,6 +62,15 @@ namespace SabberStoneBasicAI.AIAgents.Lookahead
 
 	class DynamicLookahead : AbstractAgent
 	{
+		private static Timer timer;
+		private bool timeIsOver = false;
+
+		private void OnTimedEvent(object source, ElapsedEventArgs e)
+		{
+			timeIsOver = true;
+		}
+
+
 		public override void FinalizeAgent()
 		{
 		}
@@ -72,6 +81,8 @@ namespace SabberStoneBasicAI.AIAgents.Lookahead
 
 		public override PlayerTask GetMove(POGame game)
 		{
+			timeIsOver = false;
+			timer.Start();
 			Controller player = game.CurrentPlayer;
 			// Implement a simple Mulligan Rule
 			if (player.MulliganState == Mulligan.INPUT)
@@ -91,7 +102,7 @@ namespace SabberStoneBasicAI.AIAgents.Lookahead
 			KeyValuePair<PlayerTask, int> score(KeyValuePair<PlayerTask, POGame> state, int player_id, int max_depth = 3)
 			{
 				int max_score = Int32.MinValue;
-				if (max_depth > 0 && state.Value.CurrentPlayer.PlayerId == player_id)
+				if (max_depth > 0 && state.Value.CurrentPlayer.PlayerId == player_id && !timeIsOver)
 				{
 					IEnumerable<KeyValuePair<PlayerTask, POGame>> subactions = state.Value.Simulate(state.Value.CurrentPlayer.Options()).Where(x => x.Value != null);
 
@@ -114,6 +125,13 @@ namespace SabberStoneBasicAI.AIAgents.Lookahead
 
 		public override void InitializeAgent()
 		{
+			timer = new System.Timers.Timer
+			{
+				Interval = 28000
+			};
+			timer.Elapsed += OnTimedEvent;
+			timer.AutoReset = true;
+			timer.Enabled = true;
 		}
 
 		public override void InitializeGame()

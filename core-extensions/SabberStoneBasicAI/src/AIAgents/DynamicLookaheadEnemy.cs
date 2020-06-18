@@ -78,8 +78,16 @@ namespace SabberStoneBasicAI.AIAgents.MyLookaheadEnemy
 			int optcount = validOpts.Count();
 			int maxDepth = optcount >= 5 ? (optcount >= 25 ? 2 : 3) : 3;
 
-			if (validOpts.Any()) return validOpts.Select(x => score(x, player.PlayerId, maxDepth)).OrderBy(x => x.Value).Last().Key;
-			else return player.Options().First(x => x.PlayerTaskType == PlayerTaskType.END_TURN);
+
+			if (validOpts.Any())
+			{
+				PlayerTask task = validOpts.Select(x => score(x, player.PlayerId, maxDepth)).OrderBy(x => x.Value).Last().Key;
+				return task;
+			}
+			else
+			{
+				return player.Options().First(x => x.PlayerTaskType == PlayerTaskType.END_TURN);
+			}
 
 			KeyValuePair<PlayerTask, int> score(KeyValuePair<PlayerTask, POGame> state, int player_id, int max_depth = 3)
 			{
