@@ -8,6 +8,7 @@ using SabberStoneCore.Model.Entities;
 using SabberStoneCore.Model.Zones;
 using SabberStoneCore.Tasks.PlayerTasks;
 using SabberStoneBasicAI.Meta;
+using Microsoft.Win32.SafeHandles;
 
 namespace SabberStoneBasicAI.PartialObservation
 {
@@ -104,48 +105,17 @@ namespace SabberStoneBasicAI.PartialObservation
 
 		}
 
-
-		public void addCardToZone(IZone zone, Card card, Controller player)
+		public void addCardToHandZone(Card card, Controller player)
 		{
-			var tags = new Dictionary<GameTag, int>();
-			tags[GameTag.ENTITY_ID] = game.NextId;
-			tags[GameTag.CONTROLLER] = player.PlayerId;
-			tags[GameTag.ZONE] = (int)zone.Type;
-			IPlayable playable = null;
-
-
-			switch (card.Type)
+			if(game.CurrentPlayer.PlayerId == player.PlayerId)
 			{
-				case CardType.MINION:
-					playable = new Minion(player, card, tags);
-					break;
-
-				case CardType.SPELL:
-					playable = new Spell(player, card, tags);
-					break;
-
-				case CardType.WEAPON:
-					playable = new Weapon(player, card, tags);
-					break;
-
-				case CardType.HERO:
-					tags[GameTag.ZONE] = (int)Zone.PLAY;
-					tags[GameTag.CARDTYPE] = card[GameTag.CARDTYPE];
-					playable = new Hero(player, card, tags);
-					break;
-
-				case CardType.HERO_POWER:
-					tags[GameTag.COST] = card[GameTag.COST];
-					tags[GameTag.ZONE] = (int)Zone.PLAY;
-					tags[GameTag.CARDTYPE] = card[GameTag.CARDTYPE];
-					playable = new HeroPower(player, card, tags);
-					break;
-
-				default:
-					throw new EntityException($"Couldn't create entity, because of an unknown cardType {card.Type}.");
+				game.CurrentPlayer.HandZone.Add(Entity.FromCard(game.CurrentPlayer, in card));
+			}
+			else if(game.CurrentOpponent.PlayerId == player.PlayerId)
+			{
+				game.CurrentOpponent.HandZone.Add(Entity.FromCard(game.CurrentOpponent, in card));
 			}
 
-			zone?.Add(playable);
 		}
 
 		public void CreateFullInformationGame(List<Card> deck_player1, DeckZone deckzone_player1, HandZone handzone_player1, List<Card> deck_player2, DeckZone deckzone_player2, HandZone handzone_player2)
@@ -191,6 +161,7 @@ namespace SabberStoneBasicAI.PartialObservation
 						catch (Exception e)
 						{
 							Console.Write(e);
+							//throw e;
 							//Console.WriteLine("Failed to copy");
 						}
 					}

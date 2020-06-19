@@ -307,7 +307,7 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 			while (cardsToAdd > 0 && deckCards.Count > 0)
 			{
 				Card card = deckCards.RandomElement(new Random());
-				game.addCardToZone(handZone, card, game.CurrentPlayer);
+				//game.addCardToZone(handZone, card, game.CurrentPlayer);
 				cardsToAdd--;
 				deckCards = deckCards.Where(x => remainInDeck(x, game.CurrentPlayer)).ToList();
 			}

@@ -128,41 +128,18 @@ namespace SabberStoneBasicAI.AIAgents.MyLookaheadEnemy
 		{
 			int cardsToAdd = game.CurrentPlayer.HandZone.Count;
 
-			//List<Card> deckCards = game.CurrentPlayer.Standard.Where(x => remainInDeck(x, game.CurrentPlayer)).ToList();
-			List<Card> deckCards = game.CurrentOpponent.DeckCards;
-			List<Card> handCards = new List<Card>();
-			while (cardsToAdd > 0 && deckCards.Count > 0)
-			{
-				Card card = deckCards.RandomElement(new Random());
-				handCards.Add(card);
-				deckCards = deckCards.Where(x => remainInDeck(x, game.CurrentPlayer)).ToList();
-				cardsToAdd--;
-			}
-			var setasideZone = game.CurrentPlayer.ControlledZones[Zone.SETASIDE] as SetasideZone;
-			setasideZone = new SetasideZone(game.CurrentPlayer);
-
-			game.CurrentPlayer.HandZone = new HandZone(game.CurrentPlayer);
-			createZone(game.CurrentPlayer, handCards, game.CurrentPlayer.HandZone, ref setasideZone);
-
-			return game;
-		}
-
-
-		/*private POGame createOpponentHand(POGame game)
-		{
-			int cardsToAdd = game.CurrentPlayer.HandZone.Count;
-
 			List<Card> deckCards = game.CurrentPlayer.Standard.Where(x => remainInDeck(x, game.CurrentPlayer)).ToList();
-			game.CurrentPlayer.HandZone = new HandZone(game.CurrentPlayer);
+			POGame copy = game.getCopy();
+			copy.CurrentPlayer.HandZone = new HandZone(copy.CurrentPlayer);
 			while (cardsToAdd > 0 && deckCards.Count > 0)
 			{
 				Card card = deckCards.RandomElement(new Random());
-				game.addCardToZone(game.CurrentPlayer.HandZone, card, game.CurrentPlayer);
+				copy.addCardToHandZone(card, copy.CurrentPlayer);
 				cardsToAdd--;
-				//deckCards = deckCards.Where(x => remainInDeck(x, game.CurrentPlayer)).ToList();
+				deckCards = deckCards.Where(x => remainInDeck(x, game.CurrentPlayer)).ToList();
 			}
-			return game;
-		}*/
+			return copy;
+		}
 
 		private bool remainInDeck(Card card, Controller player)
 		{
@@ -264,3 +241,25 @@ namespace SabberStoneBasicAI.AIAgents.MyLookaheadEnemy
 		}
 	}
 }
+
+/*
+System.Collections.Generic.KeyNotFoundException: The given key was not present in the dictionary.
+   at SabberStoneCore.Model.Entities.EntityList.get_Item(Int32 id) in C:\Users\Hans\Documents\HearthstoneAICompetition2020\SabberStoneCore\src\Model\Entities\EntityList.cs:line 28
+   at SabberStoneCore.Model.Game.MainCleanUp() in C:\Users\Hans\Documents\HearthstoneAICompetition2020\SabberStoneCore\src\Model\Game.cs:line 933
+   at SabberStoneCore.Model.GameEventManager.NextStepEvent(Game game, Step step) in C:\Users\Hans\Documents\HearthstoneAICompetition2020\SabberStoneCore\src\Model\GameEventManager.cs:line 117
+   at SabberStoneCore.Model.Game.set_NextStep(Step value) in C:\Users\Hans\Documents\HearthstoneAICompetition2020\SabberStoneCore\src\Model\Game.cs:line 1378
+   at SabberStoneCore.Model.Game.MainEnd() in C:\Users\Hans\Documents\HearthstoneAICompetition2020\SabberStoneCore\src\Model\Game.cs:line 916
+   at SabberStoneCore.Tasks.PlayerTasks.EndTurnTask.Process() in C:\Users\Hans\Documents\HearthstoneAICompetition2020\SabberStoneCore\src\Tasks\PlayerTasks\EndTurnTask.cs:line 35
+   at SabberStoneCore.Model.Game.Process(PlayerTask gameTask) in C:\Users\Hans\Documents\HearthstoneAICompetition2020\SabberStoneCore\src\Model\Game.cs:line 501
+   at SabberStoneBasicAI.PartialObservation.POGame.Simulate(List`1 tasksToSimulate) in C:\Users\Hans\Documents\HearthstoneAICompetition2020\core-extensions\SabberStoneBasicAI\src\PartialObservation\POGame.cs:line 156The given key was not present in the dictionary.
+   at SabberStoneBasicAI.PartialObservation.POGame.Simulate(List`1 tasksToSimulate) in C:\Users\Hans\Documents\HearthstoneAICompetition2020\core-extensions\SabberStoneBasicAI\src\PartialObservation\POGame.cs:line 164
+   at SabberStoneBasicAI.AIAgents.MyLookaheadEnemy.DynamicLookaheadEnemy.<>c__DisplayClass0_0.<GetMove>g__score|2(KeyValuePair`2 state, Int32 player_id, Int32 max_depth) in C:\Users\Hans\Documents\HearthstoneAICompetition2020\core-extensions\SabberStoneBasicAI\src\AIAgents\DynamicLookaheadEnemy.cs:line 111
+   at SabberStoneBasicAI.AIAgents.MyLookaheadEnemy.DynamicLookaheadEnemy.<>c__DisplayClass0_0.<GetMove>g__score|2(KeyValuePair`2 state, Int32 player_id, Int32 max_depth) in C:\Users\Hans\Documents\HearthstoneAICompetition2020\core-extensions\SabberStoneBasicAI\src\AIAgents\DynamicLookaheadEnemy.cs:line 115
+   at SabberStoneBasicAI.AIAgents.MyLookaheadEnemy.DynamicLookaheadEnemy.<>c__DisplayClass0_0.<GetMove>b__4(KeyValuePair`2 x) in C:\Users\Hans\Documents\HearthstoneAICompetition2020\core-extensions\SabberStoneBasicAI\src\AIAgents\DynamicLookaheadEnemy.cs:line 85
+   at System.Linq.Enumerable.WhereSelectEnumerableIterator`2.MoveNext()
+   at System.Linq.OrderedEnumerable`1.TryGetLast(Boolean& found)
+   at System.Linq.Enumerable.TryGetLast[TSource](IEnumerable`1 source, Boolean& found)
+   at System.Linq.Enumerable.Last[TSource](IEnumerable`1 source)
+   at SabberStoneBasicAI.AIAgents.MyLookaheadEnemy.DynamicLookaheadEnemy.GetMove(POGame game) in C:\Users\Hans\Documents\HearthstoneAICompetition2020\core-extensions\SabberStoneBasicAI\src\AIAgents\DynamicLookaheadEnemy.cs:line 85
+   at SabberStoneBasicAI.PartialObservation.POGameHandler.PlayGame(Boolean addToGameStats, Boolean debug) in C:\Users\Hans\Documents\HearthstoneAICompetition2020\core-extensions\SabberStoneBasicAI\src\PartialObservation\POGameHandler.cs:line 97
+*/

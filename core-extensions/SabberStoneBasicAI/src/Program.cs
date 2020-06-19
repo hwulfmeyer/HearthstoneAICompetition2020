@@ -54,11 +54,11 @@ namespace SabberStoneBasicAI
 		{
 			Agent[] agents = new Agent[] {
 				//new Agent(typeof(RandomAgent), "Random Agent"),
-				//new Agent(typeof(GreedyAgent), "Greedy Agent"),
+				new Agent(typeof(GreedyAgent), "Greedy Agent"),
 				//new Agent(typeof(AIAgents.PredatorMCTS.PredatorMCTSAgent), "PredatorMCTSAgent"),
 				//new Agent(typeof(AIAgents.AlvaroAgent.AlvaroAgent), "AlvaroAgent"),
 				//new Agent(typeof(AIAgents.Lookahead.DynamicLookahead), "Lookahead"),
-				new Agent(typeof(AIAgents.MyLookaheadEnemy.DynamicLookaheadEnemy), "LookaheadEnemy1"),
+				//new Agent(typeof(AIAgents.MyLookaheadEnemy.DynamicLookaheadEnemy), "LookaheadEnemy1"),
 				new Agent(typeof(AIAgents.MyLookaheadEnemy.DynamicLookaheadEnemy), "LookaheadEnemy2"),
 				//new Agent(typeof(AIAgents.MCTSHans.AgentHansEGREEDY7), "MCTSHansEGREEDY7"),
 				///new Agent(typeof(AIAgents.MCTSHans.AgentHansEGREEDY5), "MCTSHansEGREEDY5"),
