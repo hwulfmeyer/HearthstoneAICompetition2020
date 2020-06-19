@@ -79,7 +79,7 @@ namespace SabberStoneBasicAI
 
 			RoundRobinCompetition competition = new RoundRobinCompetition(agents, decks, "results.txt");
 			competition.CreateTasks(3);
-			competition.startEvaluation(2);
+			competition.startEvaluation(1);
 
 			Console.WriteLine("Total Games Played: " + competition.GetTotalGamesPlayed());
 			competition.PrintAgentStats();

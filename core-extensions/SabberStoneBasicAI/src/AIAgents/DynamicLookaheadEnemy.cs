@@ -106,7 +106,7 @@ namespace SabberStoneBasicAI.AIAgents.MyLookaheadEnemy
 					else
 					{
 						//simulate opponent game
-						POGame gameAltered = createOpponentHand(state.Value);
+						POGame gameAltered = createOpponentHand(state.Value.getCopy());
 						List<PlayerTask> options = gameAltered.CurrentPlayer.Options();
 						IEnumerable<KeyValuePair<PlayerTask, POGame>> subactions = gameAltered.Simulate(options).Where(x => x.Value != null);
 						List<int> scores = new List<int>();
@@ -128,28 +128,41 @@ namespace SabberStoneBasicAI.AIAgents.MyLookaheadEnemy
 		{
 			int cardsToAdd = game.CurrentPlayer.HandZone.Count;
 
-			List<Card> deckCards = game.CurrentPlayer.Standard.Where(x => remainInDeck(x, game.CurrentPlayer)).ToList();
-			game.CurrentPlayer.HandZone = new HandZone(game.CurrentPlayer);
+			//List<Card> deckCards = game.CurrentPlayer.Standard.Where(x => remainInDeck(x, game.CurrentPlayer)).ToList();
+			List<Card> deckCards = game.CurrentOpponent.DeckCards;
 			List<Card> handCards = new List<Card>();
-			while (cardsToAdd > 0)
+			while (cardsToAdd > 0 && deckCards.Count > 0)
 			{
 				Card card = deckCards.RandomElement(new Random());
 				handCards.Add(card);
+				deckCards = deckCards.Where(x => remainInDeck(x, game.CurrentPlayer)).ToList();
 				cardsToAdd--;
-				/*game.addCardToZone(game.CurrentPlayer.HandZone, card, game.CurrentPlayer);
-				cardsToAdd--;
-				deckCards = deckCards.Where(x => remainInDeck(x, game.CurrentPlayer)).ToList();*/
 			}
 			var setasideZone = game.CurrentPlayer.ControlledZones[Zone.SETASIDE] as SetasideZone;
 			setasideZone = new SetasideZone(game.CurrentPlayer);
 
-			var handZone = game.CurrentPlayer.ControlledZones[Zone.HAND] as HandZone;
-			handZone = new HandZone(game.CurrentPlayer);
-			createZone(game.CurrentPlayer, handCards, handZone, ref setasideZone);
-			game.CurrentPlayer.HandZone = handZone;
+			game.CurrentPlayer.HandZone = new HandZone(game.CurrentPlayer);
+			createZone(game.CurrentPlayer, handCards, game.CurrentPlayer.HandZone, ref setasideZone);
 
 			return game;
 		}
+
+
+		/*private POGame createOpponentHand(POGame game)
+		{
+			int cardsToAdd = game.CurrentPlayer.HandZone.Count;
+
+			List<Card> deckCards = game.CurrentPlayer.Standard.Where(x => remainInDeck(x, game.CurrentPlayer)).ToList();
+			game.CurrentPlayer.HandZone = new HandZone(game.CurrentPlayer);
+			while (cardsToAdd > 0 && deckCards.Count > 0)
+			{
+				Card card = deckCards.RandomElement(new Random());
+				game.addCardToZone(game.CurrentPlayer.HandZone, card, game.CurrentPlayer);
+				cardsToAdd--;
+				//deckCards = deckCards.Where(x => remainInDeck(x, game.CurrentPlayer)).ToList();
+			}
+			return game;
+		}*/
 
 		private bool remainInDeck(Card card, Controller player)
 		{
