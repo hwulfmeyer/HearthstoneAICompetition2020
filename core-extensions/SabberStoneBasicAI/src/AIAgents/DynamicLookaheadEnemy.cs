@@ -1,5 +1,6 @@
 ﻿using SabberStoneBasicAI.PartialObservation;
 using SabberStoneCore.Enums;
+using SabberStoneCore.Exceptions;
 using SabberStoneCore.Model;
 using SabberStoneCore.Model.Entities;
 using SabberStoneCore.Model.Zones;
@@ -108,10 +109,9 @@ namespace SabberStoneBasicAI.AIAgents.MyLookaheadEnemy
 						POGame gameAltered = createOpponentHand(state.Value);
 						List<PlayerTask> options = gameAltered.CurrentPlayer.Options();
 						IEnumerable<KeyValuePair<PlayerTask, POGame>> subactions = gameAltered.Simulate(options).Where(x => x.Value != null);
-						
 						List<int> scores = new List<int>();
 
-					foreach (KeyValuePair<PlayerTask, POGame> subaction in subactions)
+						foreach (KeyValuePair<PlayerTask, POGame> subaction in subactions)
 							scores.Add(score(subaction, player_id, max_depth - 1).Value);
 						return new KeyValuePair<PlayerTask, int>(state.Key, scores.Min());
 					}
@@ -128,17 +128,103 @@ namespace SabberStoneBasicAI.AIAgents.MyLookaheadEnemy
 		{
 			int cardsToAdd = game.CurrentPlayer.HandZone.Count;
 
-			List<Card> deckCards = game.CurrentPlayer.DeckCards;
-			HandZone handZone = new HandZone(game.CurrentPlayer);
+			List<Card> deckCards = game.CurrentPlayer.Standard.Where(x => remainInDeck(x, game.CurrentPlayer)).ToList();
+			game.CurrentPlayer.HandZone = new HandZone(game.CurrentPlayer);
+			List<Card> handCards = new List<Card>();
 			while (cardsToAdd > 0)
 			{
 				Card card = deckCards.RandomElement(new Random());
-				game.addCardToZone(handZone, card, game.CurrentPlayer);
+				handCards.Add(card);
 				cardsToAdd--;
-
+				/*game.addCardToZone(game.CurrentPlayer.HandZone, card, game.CurrentPlayer);
+				cardsToAdd--;
+				deckCards = deckCards.Where(x => remainInDeck(x, game.CurrentPlayer)).ToList();*/
 			}
+			var setasideZone = game.CurrentPlayer.ControlledZones[Zone.SETASIDE] as SetasideZone;
+			setasideZone = new SetasideZone(game.CurrentPlayer);
+
+			var handZone = game.CurrentPlayer.ControlledZones[Zone.HAND] as HandZone;
+			handZone = new HandZone(game.CurrentPlayer);
+			createZone(game.CurrentPlayer, handCards, handZone, ref setasideZone);
+			game.CurrentPlayer.HandZone = handZone;
 
 			return game;
+		}
+
+		private bool remainInDeck(Card card, Controller player)
+		{
+			int occurences = player.HandZone.Count(c => c.Card == card) + player.GraveyardZone.Count(c => c.Card == card) + player.BoardZone.Count(c => c.Card == card);
+			return card.Class == player.HeroClass && card.Cost <= player.RemainingMana && occurences < card.MaxAllowedInDeck;
+		}
+
+		private List<IPlayable> createZone(Controller opponent, List<Card> predictedCards, IZone zone, ref SetasideZone setasideZone)
+		{
+			var deck = new List<IPlayable>();
+			foreach (Card card in predictedCards)
+			{
+				var tags = new Dictionary<GameTag, int>();
+				tags[GameTag.ENTITY_ID] = opponent.Game.NextId;
+				tags[GameTag.CONTROLLER] = opponent.PlayerId;
+				tags[GameTag.ZONE] = (int)zone.Type;
+				IPlayable playable = null;
+				switch (card.Type)
+				{
+					case CardType.MINION:
+						playable = new Minion(opponent, card, tags);
+						break;
+
+					case CardType.SPELL:
+						playable = new Spell(opponent, card, tags);
+						break;
+
+					case CardType.WEAPON:
+						playable = new Weapon(opponent, card, tags);
+						break;
+
+					case CardType.HERO:
+						tags[GameTag.ZONE] = (int)SabberStoneCore.Enums.Zone.PLAY;
+						tags[GameTag.CARDTYPE] = card[GameTag.CARDTYPE];
+						playable = new Hero(opponent, card, tags);
+						break;
+
+					case CardType.HERO_POWER:
+						tags[GameTag.COST] = card[GameTag.COST];
+						tags[GameTag.ZONE] = (int)SabberStoneCore.Enums.Zone.PLAY;
+						tags[GameTag.CARDTYPE] = card[GameTag.CARDTYPE];
+						playable = new HeroPower(opponent, card, tags);
+						break;
+
+					default:
+						throw new EntityException($"Couldn't create entity, because of an unknown cardType {card.Type}.");
+				}
+
+				opponent.Game.IdEntityDic.Add(playable.Id, playable);
+
+				// add entity to the appropriate zone if it was given
+				zone?.Add(playable);
+
+				if (playable.ChooseOne)
+				{
+					playable.ChooseOnePlayables[0] = Entity.FromCard(opponent,
+							Cards.FromId(playable.Card.Id + "a"),
+							new Dictionary<GameTag, int>
+							{
+								[GameTag.CREATOR] = playable.Id,
+								[GameTag.PARENT_CARD] = playable.Id
+							},
+							setasideZone);
+					playable.ChooseOnePlayables[1] = Entity.FromCard(opponent,
+							Cards.FromId(playable.Card.Id + "b"),
+							new Dictionary<GameTag, int>
+							{
+								[GameTag.CREATOR] = playable.Id,
+								[GameTag.PARENT_CARD] = playable.Id
+							},
+							setasideZone);
+				}
+				deck.Add(playable);
+			}
+			return deck;
 		}
 
 

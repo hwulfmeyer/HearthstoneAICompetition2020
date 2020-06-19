@@ -58,16 +58,17 @@ namespace SabberStoneBasicAI
 				//new Agent(typeof(AIAgents.PredatorMCTS.PredatorMCTSAgent), "PredatorMCTSAgent"),
 				//new Agent(typeof(AIAgents.AlvaroAgent.AlvaroAgent), "AlvaroAgent"),
 				//new Agent(typeof(AIAgents.Lookahead.DynamicLookahead), "Lookahead"),
-				//new Agent(typeof(AIAgents.MyLookaheadEnemy.DynamicLookaheadEnemy), "LookaheadEnemy"),
+				new Agent(typeof(AIAgents.MyLookaheadEnemy.DynamicLookaheadEnemy), "LookaheadEnemy1"),
+				new Agent(typeof(AIAgents.MyLookaheadEnemy.DynamicLookaheadEnemy), "LookaheadEnemy2"),
 				//new Agent(typeof(AIAgents.MCTSHans.AgentHansEGREEDY7), "MCTSHansEGREEDY7"),
-				//new Agent(typeof(AIAgents.MCTSHans.AgentHansEGREEDY5), "MCTSHansEGREEDY5"),
-				//new Agent(typeof(AIAgents.MCTSHans.AgentHansEGREEDY3), "MCTSHansEGREEDY3"),
+				///new Agent(typeof(AIAgents.MCTSHans.AgentHansEGREEDY5), "MCTSHansEGREEDY5"),
+				///new Agent(typeof(AIAgents.MCTSHans.AgentHansEGREEDY3), "MCTSHansEGREEDY3"),
 				//new Agent(typeof(AIAgents.MCTSHans.AgentHansUCB1), "MCTSHansUCB1"),
 				//new Agent(typeof(AIAgents.MCTSHans.AgentHansRANDOM), "MCTSHansRANDOM"),
-				new Agent(typeof(AIAgents.MCTSHans.AgentHansDECAY1), "MCTSHansDECAY1"),
+				///new Agent(typeof(AIAgents.MCTSHans.AgentHansDECAY1), "MCTSHansDECAY1"),
 				//new Agent(typeof(AIAgents.MCTSHans.AgentHansDECAY2), "MCTSHansDECAY2"),
-				//new Agent(typeof(AIAgents.MCTSHans.AgentHansDECAY3), "MCTSHansDECAY3"),
-				new Agent(typeof(AIAgents.MCTSHans.AgentHansDECAY4), "MCTSHansDECAY4"),
+				///new Agent(typeof(AIAgents.MCTSHans.AgentHansDECAY3), "MCTSHansDECAY3"),
+				///new Agent(typeof(AIAgents.MCTSHans.AgentHansDECAY4), "MCTSHansDECAY4"),
 			};
 
 			CompetitionEvaluation.Deck[] decks = new CompetitionEvaluation.Deck[] {
@@ -78,7 +79,7 @@ namespace SabberStoneBasicAI
 
 			RoundRobinCompetition competition = new RoundRobinCompetition(agents, decks, "results.txt");
 			competition.CreateTasks(3);
-			competition.startEvaluation(8);
+			competition.startEvaluation(2);
 
 			Console.WriteLine("Total Games Played: " + competition.GetTotalGamesPlayed());
 			competition.PrintAgentStats();
@@ -94,18 +95,18 @@ namespace SabberStoneBasicAI
 				//new Agent(typeof(AIAgents.Lookahead.DynamicLookahead), "Lookahead"),
 				//new Agent(typeof(AIAgents.MyLookaheadEnemy.DynamicLookaheadEnemy), "LookaheadEnemy"),
 				//new Agent(typeof(AIAgents.MCTSHans.AgentHansEGREEDY7), "MCTSHansEGREEDY7"),
-				//new Agent(typeof(AIAgents.MCTSHans.AgentHansEGREEDY5), "MCTSHansEGREEDY5"),
-				//new Agent(typeof(AIAgents.MCTSHans.AgentHansEGREEDY3), "MCTSHansEGREEDY3"),
+				new Agent(typeof(AIAgents.MCTSHans.AgentHansEGREEDY5), "MCTSHansEGREEDY5"),
+				new Agent(typeof(AIAgents.MCTSHans.AgentHansEGREEDY3), "MCTSHansEGREEDY3"),
 				//new Agent(typeof(AIAgents.MCTSHans.AgentHansUCB1), "MCTSHansUCB1"),
 				//new Agent(typeof(AIAgents.MCTSHans.AgentHansRANDOM), "MCTSHansRANDOM"),
 				new Agent(typeof(AIAgents.MCTSHans.AgentHansDECAY1), "MCTSHansDECAY1"),
 				//new Agent(typeof(AIAgents.MCTSHans.AgentHansDECAY2), "MCTSHansDECAY2"),
-				//new Agent(typeof(AIAgents.MCTSHans.AgentHansDECAY3), "MCTSHansDECAY3"),
+				new Agent(typeof(AIAgents.MCTSHans.AgentHansDECAY3), "MCTSHansDECAY3"),
 				new Agent(typeof(AIAgents.MCTSHans.AgentHansDECAY4), "MCTSHansDECAY4"),
 			};
 
 			CompetitionEvaluation.Deck[] decks = new CompetitionEvaluation.Deck[] {
-				//new CompetitionEvaluation.Deck(Decks.RenoKazakusMage, CardClass.MAGE, "Mage"),
+				new CompetitionEvaluation.Deck(Decks.RenoKazakusMage, CardClass.MAGE, "Mage"),
 				new CompetitionEvaluation.Deck(Decks.AggroPirateWarrior, CardClass.WARRIOR, "Warrior"),
 				//new CompetitionEvaluation.Deck(Decks.MidrangeJadeShaman, CardClass.SHAMAN, "Shaman"),
 			};

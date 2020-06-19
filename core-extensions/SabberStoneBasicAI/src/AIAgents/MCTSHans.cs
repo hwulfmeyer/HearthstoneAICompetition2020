@@ -7,10 +7,8 @@ using SabberStoneCore.Model.Zones;
 using SabberStoneCore.Tasks.PlayerTasks;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Diagnostics;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Timers;
 
 namespace SabberStoneBasicAI.AIAgents.MCTSHans
@@ -135,8 +133,8 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 
 		public Stopwatch sw = new Stopwatch();
 		public double EPS = 0.5;
-		public float MAX_MILLISECONDS = 5000;
-		public int MAX_SIMULATION_DEPTH = 3;
+		public float MAX_MILLISECONDS = 3000;
+		public int MAX_SIMULATION_DEPTH = 5;
 		public double UCB1_C;
 		public string TREE_POLICY;
 		public string AGENT_NAME = "default";
@@ -178,16 +176,24 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 			{
 				if (TREE_POLICY == "decayegreedy") decay();
 				MCTSNode node = Selection(root);
+				MCTSNode expandedNode = node;
+				int numRepeat = 1;
 				if(node.parent == null || (node.task != null && node.task.PlayerTaskType != PlayerTaskType.END_TURN))
 				{
-					MCTSNode expandedNode = Expansion(ref node);
-					POGame simGame = Simulation(expandedNode);
-					Backpropagation(expandedNode, CustomScore.Score(simGame, poGame.CurrentPlayer.PlayerId));
+					expandedNode = Expansion(ref node);
 				}
-				else if(node.visitsNum == 0) Backpropagation(node, CustomScore.Score(node.poGame, poGame.CurrentPlayer.PlayerId));
+				if(node.task != null && node.task.PlayerTaskType == PlayerTaskType.END_TURN)
+				{
+					numRepeat = poGame.CurrentOpponent.DeckZone.Count;
+				}
+
+				for (int i = 0; i < numRepeat; i++)
+				{
+					POGame simGame = Simulation(expandedNode, poGame.CurrentPlayer.PlayerId);
+					Backpropagation(node, CustomScore.Score(simGame, poGame.CurrentPlayer.PlayerId));
+				}
 				numSimulation++;
 			}
-			Console.WriteLine(poGame.CurrentOpponent.HandZone.Count + "  " + poGame.CurrentOpponent.DeckZone.Count + "   " + AGENT_NAME);
 			totalVisitedNum += root.visitsNum;
 			numMoves++;
 
@@ -222,14 +228,19 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 			return node.parent!=null?node.value + UCB1_C * Math.Sqrt(2 * Math.Log(node.parent.visitsNum) / (node.visitsNum + 1)):0;
 		}
 
-		public POGame Simulation(MCTSNode node)
+		public POGame Simulation(MCTSNode node, int myPlayerId)
 		{
-			if (node.task.PlayerTaskType == PlayerTaskType.END_TURN) return node.poGame;
 			int depth = MAX_SIMULATION_DEPTH;
 			POGame simGame = node.poGame;
+			if(node.poGame.CurrentPlayer.Id != myPlayerId) simGame = createOpponentHand(simGame.getCopy());
 			while (depth > 0)
 			{
 				IEnumerable<KeyValuePair<PlayerTask, POGame>> subactions = simGame.Simulate(simGame.CurrentPlayer.Options()).Where(x => x.Value != null);
+				if (!subactions.Any())
+				{
+					break;
+				}
+
 				KeyValuePair<PlayerTask, POGame> action = subactions.RandomElement(rnd);
 				simGame = action.Value;
 				depth--;
@@ -284,6 +295,29 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 					//random
 					return node.children[rnd.Next(node.children.Count)];
 			}
+		}
+
+
+		private POGame createOpponentHand(POGame game)
+		{
+			int cardsToAdd = game.CurrentPlayer.HandZone.Count;
+
+			List<Card> deckCards = game.CurrentPlayer.Standard.Where(x => remainInDeck(x, game.CurrentPlayer)).ToList();
+			HandZone handZone = new HandZone(game.CurrentPlayer);
+			while (cardsToAdd > 0 && deckCards.Count > 0)
+			{
+				Card card = deckCards.RandomElement(new Random());
+				game.addCardToZone(handZone, card, game.CurrentPlayer);
+				cardsToAdd--;
+				deckCards = deckCards.Where(x => remainInDeck(x, game.CurrentPlayer)).ToList();
+			}
+			return game;
+		}
+
+		private bool remainInDeck(Card card, Controller player)
+		{
+			int occurences = player.HandZone.Count(c => c.Card == card) + player.GraveyardZone.Count(c => c.Card == card) + player.BoardZone.Count(c => c.Card == card);
+			return card.Class == player.HeroClass && card.Cost <= player.RemainingMana && occurences < card.MaxAllowedInDeck;
 		}
 
 
