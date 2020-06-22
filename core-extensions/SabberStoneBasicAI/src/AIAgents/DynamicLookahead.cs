@@ -75,7 +75,7 @@ namespace SabberStoneBasicAI.AIAgents.Lookahead
 		{
 		}
 
-		public override void FinalizeGame()
+		public override void FinalizeGame(SabberStoneCore.Model.Game game, Controller controllers)
 		{
 		}
 

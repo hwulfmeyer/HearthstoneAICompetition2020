@@ -35,7 +35,7 @@ namespace SabberStoneBasicAI.AIAgents.AlvaroAgent
 
 		public override void FinalizeAgent() { }
 
-		public override void FinalizeGame() { }
+		public override void FinalizeGame(SabberStoneCore.Model.Game game, SabberStoneCore.Model.Entities.Controller controllers) { }
 
 		public override void InitializeAgent() { }
 

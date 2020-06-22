@@ -251,7 +251,7 @@ namespace SabberStoneBasicAI.AIAgents.MyLookaheadEnemy
 		{
 		}
 
-		public override void FinalizeGame()
+		public override void FinalizeGame(Game game, Controller controllers)
 		{
 		}
 

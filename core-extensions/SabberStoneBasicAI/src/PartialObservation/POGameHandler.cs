@@ -132,8 +132,8 @@ namespace SabberStoneBasicAI.PartialObservation
 			if (addToGameStats)
 				gameStats.addGame(game, watches);
 
-			player1.FinalizeGame();
-			player2.FinalizeGame();
+			player1.FinalizeGame(game, game.CurrentPlayer == game.Player1 ? game.CurrentPlayer : game.CurrentOpponent);
+			player2.FinalizeGame(game, !(game.CurrentPlayer == game.Player1) ? game.CurrentPlayer : game.CurrentOpponent);
 			return true;
 		}
 

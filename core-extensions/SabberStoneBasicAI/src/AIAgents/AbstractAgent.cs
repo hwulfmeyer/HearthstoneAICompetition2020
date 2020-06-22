@@ -19,7 +19,7 @@ namespace SabberStoneBasicAI.AIAgents
 
 		public abstract PlayerTask GetMove(POGame poGame);
 
-		public abstract void FinalizeGame();
+		public abstract void FinalizeGame(Game game, SabberStoneCore.Model.Entities.Controller controllers);
 
 		public abstract void FinalizeAgent();
 

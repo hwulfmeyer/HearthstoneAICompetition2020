@@ -96,7 +96,7 @@ namespace SabberStoneBasicAI.AIAgents.PredatorMCTS
 			return result;
 		}
 		
-		public override void FinalizeGame() { }
+		public override void FinalizeGame(SabberStoneCore.Model.Game game, Controller controllers) { }
 
 		public override void FinalizeAgent() { }
 

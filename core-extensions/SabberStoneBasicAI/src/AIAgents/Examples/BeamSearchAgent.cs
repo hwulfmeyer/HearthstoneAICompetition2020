@@ -137,7 +137,7 @@ namespace SabberStoneBasicAI.AIAgents
 			_watch = new Stopwatch();
 		}
 
-		public override void FinalizeGame()
+		public override void FinalizeGame(SabberStoneCore.Model.Game game, SabberStoneCore.Model.Entities.Controller controllers)
 		{
 		}
 

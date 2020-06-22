@@ -325,7 +325,7 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 		{
 		}
 
-		public override void FinalizeGame()
+		public override void FinalizeGame(Game game, Controller controllers)
 		{
 			Console.WriteLine(AGENT_NAME + " Avg. Simulations: " + totalVisitedNum/numMoves);
 		}
