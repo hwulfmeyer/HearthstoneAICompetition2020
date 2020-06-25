@@ -9,6 +9,7 @@ using SabberStoneCore.Config;
 using SabberStoneBasicAI.PartialObservation;
 using System.Collections.Concurrent;
 using System.Numerics;
+using System.Linq;
 
 namespace SabberStoneBasicAI.CompetitionEvaluation
 {
@@ -253,7 +254,8 @@ namespace SabberStoneBasicAI.CompetitionEvaluation
 			}
 		}
 
-		public void CreateTasks(int games_per_matchup = 10)
+
+		public void CreateTasks(int games_per_matchup = 10, int[] allowedIndex = null)
 		{
 			tasks = new ConcurrentQueue<EvaluationTask>();
 
@@ -265,6 +267,9 @@ namespace SabberStoneBasicAI.CompetitionEvaluation
 					for (int player_2 = 0; player_2 < results.GetLength(1); player_2++)
 					{
 						if (player_1 == player_2)
+							continue;
+
+						if (allowedIndex != null && !allowedIndex.Contains(player_1) && !allowedIndex.Contains(player_2))
 							continue;
 
 						for (int deck_1 = 0; deck_1 < results.GetLength(2); deck_1++)
@@ -469,17 +474,83 @@ namespace SabberStoneBasicAI.CompetitionEvaluation
 			}
 		}
 
-		public void PrintDetailedWinratesOfAgent(int agent)
+		public void PrintAgentStatsDetailedWinrates()
 		{
-			throw new Exception("not implemented yet");
+			for (int player_1 = 0; player_1 < agents.Length; player_1++)
+			{
+				PrintDetailedWinratesOfAgent(player_1);
+				Console.WriteLine("");
+			}
 		}
 
+		public void PrintDetailedWinratesOfAgent(int agent)
+		{
+			for (int player_2 = 0; player_2 < agents.Length; player_2++)
+			{
+				int games_played = 0;
+				int games_won = 0;
+				int games_lost_by_exception = 0;
+				if (agent == player_2) continue;
+
+				for (int deck_1 = 0; deck_1 < decks.Length; deck_1++)
+				{ 
+					for (int deck_2 = 0; deck_2 < decks.Length; deck_2++)
+					{
+						// first round
+						games_played += results[agent, player_2, deck_1, deck_2].GamesPlayed;
+						games_won += results[agent, player_2, deck_1, deck_2].WinsPlayer1;
+						games_lost_by_exception += results[agent, player_2, deck_1, deck_2].ExceptionsPlayer1;
+
+						// second round
+						games_played += results[player_2, agent, deck_2, deck_1].GamesPlayed;
+						games_won += results[player_2, agent, deck_2, deck_1].WinsPlayer2;
+						games_lost_by_exception += results[player_2, agent, deck_2, deck_1].ExceptionsPlayer2;
+					}
+				}
+				Console.WriteLine($"Agents {agents[agent].AgentAuthor} vs. {agents[player_2].AgentAuthor} win-rate={Math.Round(((float)games_won) / games_played, 2)} " +
+					$"({games_won} out of {games_played} games). {games_lost_by_exception} were lost by Exception.");
+			}
+		}
+
+		public void PrintAgentStatsDetailedDeckWinrates()
+		{
+			for (int player_1 = 0; player_1 < agents.Length; player_1++)
+			{
+				PrintDetailedDeckWinratesOfAgent(player_1);
+				Console.WriteLine("");
+			}
+		}
 
 		public void PrintDetailedDeckWinratesOfAgent(int agent)
 		{
-			throw new Exception("not implemented yet");
+			for (int deck_1 = 0; deck_1 < decks.Length; deck_1++)
+			{
+				int games_played = 0;
+				int games_won = 0;
+				int games_lost_by_exception = 0;
+				for (int deck_2 = 0; deck_2 < decks.Length; deck_2++)
+				{
+					for (int player_2 = 0; player_2 < agents.Length; player_2++)
+					{
+						if (agent == player_2) continue;
+
+						// first round
+						games_played += results[agent, player_2, deck_1, deck_2].GamesPlayed;
+						games_won += results[agent, player_2, deck_1, deck_2].WinsPlayer1;
+						games_lost_by_exception += results[agent, player_2, deck_1, deck_2].ExceptionsPlayer1;
+
+						// second round
+						games_played += results[player_2, agent, deck_2, deck_1].GamesPlayed;
+						games_won += results[player_2, agent, deck_2, deck_1].WinsPlayer2;
+						games_lost_by_exception += results[player_2, agent, deck_2, deck_1].ExceptionsPlayer2;
+					}
+				}
+				Console.WriteLine($"Agent {agents[agent].AgentAuthor}'s Deck {decks[deck_1].deckname} win-rate={Math.Round(((float)games_won) / games_played, 2)} " +
+					$"({games_won} out of {games_played} games). {games_lost_by_exception} were lost by Exception.");
+			}
 		}
 
 	}
+
 
 }

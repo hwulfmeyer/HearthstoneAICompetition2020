@@ -31,42 +31,49 @@ namespace SabberStoneBasicAI.AIAgents
 
 		public override void FinalizeGame(Game game, Controller myPlayer)
 		{
-			int GameResult = myPlayer.PlayState == PlayState.WON ? 1 : myPlayer.PlayState == PlayState.TIED ? 0 : -1;
-			int GameResultHp = myPlayer.PlayState == PlayState.WON ? myPlayer.Hero.Health : myPlayer.PlayState == PlayState.TIED ? 0 : -myPlayer.Opponent.Hero.Health;
-
-			for (int i = 0; i < GameStateEncodes.Count; i++)
+			bool write = false;
+			if (write)
 			{
-				GameStateEncodes[i].Add(GameResult);
-				GameStateEncodes[i].Add(GameResultHp);
-				GameStateEncodes[i].Add(GameResultHp * (GameStateEncodes[i][0] + 1) / 11.0f);
-				GameStateEncodes[i].Add(GameResultHp * (i+1.0f) / GameStateEncodes.Count);
-			}
+				int GameResult = myPlayer.PlayState == PlayState.WON ? 1 : myPlayer.PlayState == PlayState.TIED ? 0 : -1;
+				int GameResultHp = myPlayer.PlayState == PlayState.WON ? myPlayer.Hero.Health : myPlayer.PlayState == PlayState.TIED ? 0 : -myPlayer.Opponent.Hero.Health;
 
-			bool success = false;
-			while(!success) {
-				try
+				for (int i = 0; i < GameStateEncodes.Count; i++)
 				{
-					using (FileStream fileStream = new FileStream("F:\\file_training_random" + myPlayer.HeroClass.ToString() + ".csv", FileMode.Append, FileAccess.Write, FileShare.None))
-					using (var writer = new StreamWriter(fileStream))
-					{
-						using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-						{
-							foreach (List<float> record in GameStateEncodes)
-							{
-								foreach (float field in record)
-								{
-									csv.WriteField(field);
-								}
+					GameStateEncodes[i].Add(GameResult);
+					GameStateEncodes[i].Add(GameResultHp);
+					GameStateEncodes[i].Add(GameResultHp * (GameStateEncodes[i][0] + 1) / 11.0f);
+					GameStateEncodes[i].Add(GameResultHp * (i + 1.0f) / GameStateEncodes.Count);
+				}
 
-								csv.NextRecord();
+				bool success = false;
+				bool test = true;
+				string folder = "F:\\data_" + (test ? "test" : "train") + "\\";
+				while (!success)
+				{
+					try
+					{
+						using (FileStream fileStream = new FileStream(folder + "random_" + myPlayer.HeroClass.ToString() + ".csv", FileMode.Append, FileAccess.Write, FileShare.None))
+						using (var writer = new StreamWriter(fileStream))
+						{
+							using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+							{
+								foreach (List<float> record in GameStateEncodes)
+								{
+									foreach (float field in record)
+									{
+										csv.WriteField(field);
+									}
+
+									csv.NextRecord();
+								}
+								success = true;
 							}
-							success = true;
 						}
 					}
-				}
-				catch
-				{
+					catch
+					{
 
+					}
 				}
 			}
 		}

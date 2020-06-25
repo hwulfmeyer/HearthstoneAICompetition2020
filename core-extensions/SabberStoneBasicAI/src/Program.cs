@@ -25,8 +25,8 @@ using SabberStoneBasicAI.Score;
 using SabberStoneBasicAI.AIAgents;
 using SabberStoneBasicAI.PartialObservation;
 using SabberStoneBasicAI.CompetitionEvaluation;
-using Microsoft.ML;
-using Microsoft.ML.Data;
+using System.Threading;
+using SabberStoneBasicAI.AIAgents.Examples;
 
 namespace SabberStoneBasicAI
 {
@@ -45,7 +45,6 @@ namespace SabberStoneBasicAI
 			//RandomGames();
 			//TestPOGame();
 			//TestFullGames();
-			//CurrentStats();
 			TestTournament();
 			//LearningPipeline();
 
@@ -53,23 +52,18 @@ namespace SabberStoneBasicAI
 			Console.ReadLine();
 		}
 
-		public static void LearningPipeline()
-		{
-			//Create MLContext
-			MLContext mlContext = new MLContext();
-
-			//Load Data
-			IDataView data = mlContext.Data.LoadFromTextFile<HousingData>("my-data-file.csv", separatorChar: ',', hasHeader: true);
-		}
-
 		public static void TestTournament()
 		{
 			Agent[] agents = new Agent[] {
-				new Agent(typeof(RandomAgent), "Random Agent1"),
-				new Agent(typeof(RandomAgent), "Random Agent2"),
+				//new Agent(typeof(AIAgents.Learning.DynamicLookaheadv0), "DLAv0"),
+				new Agent(typeof(AIAgents.Learning.DynamicLookaheadv1), "DLAv1_1"),
+				new Agent(typeof(AIAgents.Learning.DynamicLookaheadv1), "DLAv1_2"),
+				new Agent(typeof(AIAgents.Examples.GreedyAgent), "greedy"),
+				new Agent(typeof(AIAgents.Learning.GreedyAgentv3), "GreedyAgentv3"),
+				new Agent(typeof(AIAgents.Learning.GreedyAgentv2), "GreedyAgentv2"),
+				//new Agent(typeof(AIAgents.Learning.GreedyAgentv1), "GreedyAgentv1"),
+				//new Agent(typeof(AIAgents.DynamicLookaheadAgent), "Lookahead"),
 				//new Agent(typeof(RandomAgent), "Random Agent3"),
-				//new Agent(typeof(GreedyAgent), "Greedy Agent1"),
-				//new Agent(typeof(GreedyAgent), "Greedy Agent2"),
 				//new Agent(typeof(AIAgents.PredatorMCTS.PredatorMCTSAgent), "PredatorMCTSAgent"),
 				//new Agent(typeof(AIAgents.AlvaroAgent.AlvaroAgent), "AlvaroAgent"),
 				//new Agent(typeof(AIAgents.Lookahead.DynamicLookahead), "Lookahead"),
@@ -94,48 +88,24 @@ namespace SabberStoneBasicAI
 				new CompetitionEvaluation.Deck(Decks.MiraclePirateRogue, CardClass.ROGUE, "Rogue"),
 				new CompetitionEvaluation.Deck(Decks.ZooDiscardWarlock, CardClass.WARLOCK, "Warlock"),
 			};
-
+			int[] indexes = new int[] {0,1};
 			RoundRobinCompetition competition = new RoundRobinCompetition(agents, decks, "results.txt");
-			competition.CreateTasks(2000);
-			competition.startEvaluation(8);
-			//#Decks^2 * 2 * #Agents * #tasks = games
 			Console.WriteLine("Total Games Played: " + competition.GetTotalGamesPlayed());
 			competition.PrintAgentStats();
-		}
+			competition.PrintAgentStatsDetailedWinrates();
+			competition.PrintAgentStatsDetailedDeckWinrates();
+			//competition.CreateTasks(40); //#Decks^2 * #Agents-1 * #Agents * #tasks = games
+			competition.CreateTasks(3, indexes); //#Decks^2 * #Agents-1 * #Agents * #tasks = games
+			Stopwatch sw = new Stopwatch();
+			sw.Start();
+			competition.startEvaluation(8);
+			sw.Stop();
+			Console.WriteLine(sw.Elapsed.Duration().TotalMinutes);
 
-		public static void CurrentStats()
-		{
-			Agent[] agents = new Agent[] {
-				//new Agent(typeof(RandomAgent), "Random Agent"),
-				//new Agent(typeof(GreedyAgent), "Greedy Agent"),
-				//new Agent(typeof(AIAgents.PredatorMCTS.PredatorMCTSAgent), "PredatorMCTSAgent"),
-				//new Agent(typeof(AIAgents.AlvaroAgent.AlvaroAgent), "AlvaroAgent"),
-				//new Agent(typeof(AIAgents.Lookahead.DynamicLookahead), "Lookahead"),
-				//new Agent(typeof(AIAgents.MyLookaheadEnemy.DynamicLookaheadEnemy), "LookaheadEnemy"),
-				//new Agent(typeof(AIAgents.MCTSHans.AgentHansEGREEDY7), "MCTSHansEGREEDY7"),
-				new Agent(typeof(AIAgents.MCTSHans.AgentHansEGREEDY5), "MCTSHansEGREEDY5"),
-				new Agent(typeof(AIAgents.MCTSHans.AgentHansEGREEDY3), "MCTSHansEGREEDY3"),
-				//new Agent(typeof(AIAgents.MCTSHans.AgentHansUCB1), "MCTSHansUCB1"),
-				//new Agent(typeof(AIAgents.MCTSHans.AgentHansRANDOM), "MCTSHansRANDOM"),
-				new Agent(typeof(AIAgents.MCTSHans.AgentHansDECAY1), "MCTSHansDECAY1"),
-				//new Agent(typeof(AIAgents.MCTSHans.AgentHansDECAY2), "MCTSHansDECAY2"),
-				new Agent(typeof(AIAgents.MCTSHans.AgentHansDECAY3), "MCTSHansDECAY3"),
-				new Agent(typeof(AIAgents.MCTSHans.AgentHansDECAY4), "MCTSHansDECAY4"),
-			};
-
-			CompetitionEvaluation.Deck[] decks = new CompetitionEvaluation.Deck[] {
-				new CompetitionEvaluation.Deck(Decks.AggroPirateWarrior, CardClass.WARRIOR, "Warrior"),
-				new CompetitionEvaluation.Deck(Decks.MidrangeJadeShaman, CardClass.SHAMAN, "Shaman"),
-				new CompetitionEvaluation.Deck(Decks.RenoKazakusMage, CardClass.MAGE, "Mage"),
-				new CompetitionEvaluation.Deck(Decks.MidrangeBuffPaladin, CardClass.PALADIN, "Paladin"),
-				new CompetitionEvaluation.Deck(Decks.MiraclePirateRogue, CardClass.ROGUE, "Rogue"),
-				new CompetitionEvaluation.Deck(Decks.ZooDiscardWarlock, CardClass.WARLOCK, "Warlock"),
-				new CompetitionEvaluation.Deck(Decks.RenoKazakusDragonPriest, CardClass.PRIEST, "Priest"),
-				new CompetitionEvaluation.Deck(Decks.MidrangeSecretHunter, CardClass.HUNTER, "Hunter"),
-			};
-
-			RoundRobinCompetition competition = new RoundRobinCompetition(agents, decks, "results.txt");
+			Console.WriteLine("Total Games Played: " + competition.GetTotalGamesPlayed());
 			competition.PrintAgentStats();
+			competition.PrintAgentStatsDetailedWinrates();
+			competition.PrintAgentStatsDetailedDeckWinrates();
 		}
 
 		public static void TestPOGame()

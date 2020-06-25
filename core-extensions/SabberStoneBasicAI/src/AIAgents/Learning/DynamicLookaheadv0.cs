@@ -7,7 +7,7 @@ using SabberStoneCore.Model.Entities;
 using SabberStoneCore.Enums;
 using System.Timers;
 
-namespace SabberStoneBasicAI.AIAgents.Lookahead
+namespace SabberStoneBasicAI.AIAgents.Learning
 {
 	class CustomScore : Score.Score
 	{
@@ -60,7 +60,7 @@ namespace SabberStoneBasicAI.AIAgents.Lookahead
 	}
 
 
-	class DynamicLookahead : AbstractAgent
+	class DynamicLookaheadv0 : AbstractAgent
 	{
 		private static Timer timer;
 		private bool timeIsOver = false;
