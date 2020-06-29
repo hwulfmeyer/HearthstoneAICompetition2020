@@ -56,21 +56,21 @@ namespace SabberStoneBasicAI
 		{
 			Agent[] agents = new Agent[] {
 				//new Agent(typeof(AIAgents.Learning.DynamicLookaheadv0), "DLAv0"),
-				new Agent(typeof(AIAgents.Learning.DynamicLookaheadv1), "DLAv1_1"),
-				new Agent(typeof(AIAgents.Learning.DynamicLookaheadv1), "DLAv1_2"),
-				new Agent(typeof(AIAgents.Examples.GreedyAgent), "greedy"),
-				new Agent(typeof(AIAgents.Learning.GreedyAgentv3), "GreedyAgentv3"),
-				new Agent(typeof(AIAgents.Learning.GreedyAgentv2), "GreedyAgentv2"),
+				//new Agent(typeof(AIAgents.Learning.DynamicLookaheadv1), "DLAv1"),
+				//new Agent(typeof(AIAgents.Examples.GreedyAgent), "greedy"),
+				//new Agent(typeof(AIAgents.Learning.GreedyAgentv3), "GreedyAgentv3"),
+				//new Agent(typeof(AIAgents.Learning.GreedyAgentv2), "GreedyAgentv2"),
 				//new Agent(typeof(AIAgents.Learning.GreedyAgentv1), "GreedyAgentv1"),
 				//new Agent(typeof(AIAgents.DynamicLookaheadAgent), "Lookahead"),
-				//new Agent(typeof(RandomAgent), "Random Agent3"),
+				new Agent(typeof(AIAgents.Learning.RandomAgent), "Random Agent1"),
+				new Agent(typeof(AIAgents.Learning.RandomAgent), "Random Agent2"),
 				//new Agent(typeof(AIAgents.PredatorMCTS.PredatorMCTSAgent), "PredatorMCTSAgent"),
 				//new Agent(typeof(AIAgents.AlvaroAgent.AlvaroAgent), "AlvaroAgent"),
-				//new Agent(typeof(AIAgents.Lookahead.DynamicLookahead), "Lookahead"),
+				//new Agent(typeof(AIAgents.Examples.DynamicLookaheadAgent), "Lookahead"),
 				//new Agent(typeof(AIAgents.MyLookaheadEnemy.DynamicLookaheadEnemy), "LookaheadEnemy1"),
 				//new Agent(typeof(AIAgents.MyLookaheadEnemy.DynamicLookaheadEnemy), "LookaheadEnemy2"),
 				//new Agent(typeof(AIAgents.MCTSHans.AgentHansEGREEDY7), "MCTSHansEGREEDY7"),
-				///new Agent(typeof(AIAgents.MCTSHans.AgentHansEGREEDY5), "MCTSHansEGREEDY5"),
+				//new Agent(typeof(AIAgents.MCTSHans.AgentHansEGREEDY5), "MCTSHansEGREEDY5_v1"),
 				///new Agent(typeof(AIAgents.MCTSHans.AgentHansEGREEDY3), "MCTSHansEGREEDY3"),
 				//new Agent(typeof(AIAgents.MCTSHans.AgentHansUCB1), "MCTSHansUCB1"),
 				//new Agent(typeof(AIAgents.MCTSHans.AgentHansRANDOM), "MCTSHansRANDOM"),
@@ -95,12 +95,15 @@ namespace SabberStoneBasicAI
 			competition.PrintAgentStatsDetailedWinrates();
 			competition.PrintAgentStatsDetailedDeckWinrates();
 			//competition.CreateTasks(40); //#Decks^2 * #Agents-1 * #Agents * #tasks = games
-			competition.CreateTasks(3, indexes); //#Decks^2 * #Agents-1 * #Agents * #tasks = games
+			competition.CreateTasks(150, indexes); //#Decks^2 * #Agents-1 * #Agents * #tasks = games
 			Stopwatch sw = new Stopwatch();
 			sw.Start();
 			competition.startEvaluation(8);
 			sw.Stop();
-			Console.WriteLine(sw.Elapsed.Duration().TotalMinutes);
+			int mins = TimeSpan.FromTicks(sw.Elapsed.Ticks).Minutes;
+			double secs = TimeSpan.FromTicks(sw.Elapsed.Ticks).TotalSeconds;
+			Console.WriteLine($"{mins}min {(secs - mins*60.0f)}sec");
+
 
 			Console.WriteLine("Total Games Played: " + competition.GetTotalGamesPlayed());
 			competition.PrintAgentStats();

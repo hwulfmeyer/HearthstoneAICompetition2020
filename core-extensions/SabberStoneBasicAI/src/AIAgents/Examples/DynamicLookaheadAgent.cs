@@ -5,9 +5,9 @@ using SabberStoneBasicAI.PartialObservation;
 using SabberStoneCore.Tasks.PlayerTasks;
 using SabberStoneCore.Model.Entities;
 using SabberStoneCore.Enums;
+using System.Diagnostics;
 
-
-namespace SabberStoneBasicAI.AIAgents
+namespace SabberStoneBasicAI.AIAgents.Examples
 {
 	// Implemented by Tom Heimbrodt and winner of the 2019 Hearthstone AI Competition's Premade Deck Playing Track
 	class CustomScore : Score.Score
@@ -63,12 +63,19 @@ namespace SabberStoneBasicAI.AIAgents
 
 	class DynamicLookaheadAgent : AbstractAgent
 	{
+
+		private long totalMilliseconds;
+		private long totalMoves;
+		private long maxMilliseconds;
+
 		public override void FinalizeAgent()
 		{
 		}
 
 		public override void FinalizeGame(SabberStoneCore.Model.Game game, Controller controllers)
 		{
+			Console.WriteLine(" Avg. Milliseconds: " + totalMilliseconds / totalMoves);
+			Console.WriteLine(" Max. Milliseconds: " + maxMilliseconds);
 		}
 
 		public override PlayerTask GetMove(POGame game)
@@ -81,14 +88,17 @@ namespace SabberStoneBasicAI.AIAgents
 				return ChooseTask.Mulligan(player, mulligan);
 			}
 
-
+			Stopwatch sw = new Stopwatch();
 			var validOpts = game.Simulate(player.Options()).Where(x => x.Value != null);
 			var optcount = validOpts.Count();
-
+			sw.Start();
 			var returnValue = validOpts.Any() ?
 				validOpts.Select(x => score(x, player.PlayerId, (optcount >= 5) ? ((optcount >= 25) ? 1 : 2) : 3)).OrderBy(x => x.Value).Last().Key :
 				player.Options().First(x => x.PlayerTaskType == PlayerTaskType.END_TURN);
-
+			sw.Stop();
+			maxMilliseconds = maxMilliseconds > sw.ElapsedMilliseconds ? maxMilliseconds : sw.ElapsedMilliseconds;
+			totalMilliseconds += sw.ElapsedMilliseconds;
+			totalMoves++;
 			return returnValue;
 
 			KeyValuePair<PlayerTask, int> score(KeyValuePair<PlayerTask, POGame> state, int player_id, int max_depth = 3)

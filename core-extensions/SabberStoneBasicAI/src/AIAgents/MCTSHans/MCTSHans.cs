@@ -46,6 +46,35 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 			TREE_POLICY = "egreedy";
 			AGENT_NAME = "AgentHansEGREEDY5";
 		}
+
+		public override void InitializeAgent()
+		{
+			base.InitializeAgent();
+			write = true;
+			test = false;
+			GameStateEncodes = new List<List<float>>();
+			GameStateEncodesEnd = new List<List<float>>();
+			CardClassScoreWeights = new Dictionary<string, List<double>>();
+
+			List<double> weights;
+			weights = new List<double>() { 1.938747258483477, 0.818240001476494, 1.381586607839055, 0.2526790972982106, -0.13122544891217455, 0.5171498586440116, 0.6718084241473198, 1.527569550651253, 0.7371746481457607, 0.19267568915876684, -0.058069376174614655, -0.23795491752372047, -0.4966140671510174, -2.0461036981404126, -0.4834859319895265, -0.11891460660513306, -0.9399243561244603, -0.154408573109368, -0.41204929691020564, -0.02890839443098675, -2.524398511157367, 0.3271311310916452, -0.44426177931995636, 0.13400038360669292, 0.1127043028273832, -0.17034012642976573 };
+			CardClassScoreWeights.Add("MAGE", weights);
+
+			weights = new List<double>() { 4.379025236615299, 0.9594149923900825, -0.34575840415683756, -0.10564913313685792, -0.09716465647655594, 0.46881024950914435, 0.6927722089436678, -1.9253868236114973, 1.0687800258506883, -0.16339375298349315, -0.2929414167615923, 0.018081633444984174, -0.3165979942906423, -4.463832600942665, -0.6139280555780036, 0.17534863421886318, -1.4324168856893733, 0.03132877550307023, -0.5143910086242638, -0.15223773973101173, -7.645234045070544, 0.5051136774125496, -0.31135155066596243, 0.053594204954991696, 0.10067769525483766, 0.552300496047932 };
+			CardClassScoreWeights.Add("PALADIN", weights);
+
+			weights = new List<double>() { 4.471722417034926, 1.0082990509892957, 0.5925602960770466, 0.7027545989764048, -0.01245883357340686, 0.3242852141472355, 0.6954122075277187, -0.8900966243228271, 0.47283741831279635, -0.0439418558891088, 0.24692150020588474, -0.11485403574240424, -0.6083965720446799, -4.261644630014515, -0.529740187802663, 0.4353390042339865, -1.6929310970208262, 0.012162241126420281, -0.44829714989656727, -0.021610908320330947, 0.3469552695476015, 0.6155910598883376, -0.3296255555934871, 0.31053729962836063, 0.48543889369434917, -0.3037862463926443 };
+			CardClassScoreWeights.Add("ROGUE", weights);
+
+			weights = new List<double>() { 4.374720962335739, 1.0215904747643367, -0.3150188886481086, -0.06238242363857954, -0.06759220919860373, 0.5656590233403843, 0.3885512221800834, -0.17147831203631791, -0.3781746944755436, 0.0034751150323643542, 0.28508309496300777, -0.07325098411514964, -0.19882269153444776, -4.194720857391452, -0.519375057295756, -0.23973255672480906, -1.4125582272155413, 0.010208177164815535, -0.49644178971877934, -0.21577822311450603, -0.27919371639786444, -0.21945439292187974, -0.311899520077985, 0.2442347322744321, 0.3214521462218269, 0.43565274379344204 };
+			CardClassScoreWeights.Add("SHAMAN", weights);
+
+			weights = new List<double>() { -1.072192661157513, 0.48298261315140345, -1.3594242462917916, 2.2596705419393848, -0.30360423342872417, 0.21406633228280458, 1.0211975782368317, 3.54749564050917, -0.07007404222163256, 0.024789604882904676, -0.5313245057925058, -0.17493303956967668, -3.7166450600831467, 2.37119206488871, -0.9264883742679608, -1.571498381872472, -1.5154581646252392, 0.024024360028297675, -0.40652186000033413, -0.02200559938182131, 1.176836406102666e-14, -1.0737549848094954, -0.4642755352193355, -0.13364746407394681, 0.2634316514630303, -1.0875941482588776 };
+			CardClassScoreWeights.Add("WARLOCK", weights);
+
+			weights = new List<double>() { 4.005229679577584, 0.9601773887212031, -0.01691428580547783, 0.7357998724008524, 0.12226592531098472, 0.22858566660395913, 0.5250712181907465, 0.5333028408195718, 0.7579364095871625, 0.1415790067415535, 0.1790327881121236, 0.06619431453638194, -1.2715308932608584, -3.8380718069182675, -0.5363176260976187, 0.028662543891683337, -1.8904231652309114, 0.08274439103048192, -0.6240644839738418, -0.04579668263310886, -14.410304908146836, 0.20670668702698958, -0.13184222329572082, -0.1325371317911512, 0.2853191674767238, 0.8432421147379726 };
+			CardClassScoreWeights.Add("WARRIOR", weights);
+		}
 	}
 
 	class AgentHansEGREEDY3: AgentHans
@@ -79,7 +108,7 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 
 		public override void decay()
 		{
-			EPS = Math.Exp(-sw.ElapsedMilliseconds / MAX_MILLISECONDS);
+			EPS = Math.Exp(-TimeSpan.FromTicks(sw.Elapsed.Ticks).TotalMilliseconds / MAX_MILLISECONDS);
 		}
 	}
 
@@ -93,7 +122,7 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 
 		public override void decay()
 		{
-			EPS = Math.Exp(-sw.ElapsedMilliseconds / (MAX_MILLISECONDS/2));
+			EPS = Math.Exp(-TimeSpan.FromTicks(sw.Elapsed.Ticks).TotalMilliseconds / (MAX_MILLISECONDS/2));
 		}
 	}
 
@@ -107,7 +136,7 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 
 		public override void decay()
 		{
-			EPS = Math.Exp(-sw.ElapsedMilliseconds / (MAX_MILLISECONDS / 3));
+			EPS = Math.Exp(-TimeSpan.FromTicks(sw.Elapsed.Ticks).TotalMilliseconds / (MAX_MILLISECONDS / 3));
 		}
 	}
 
@@ -121,7 +150,7 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 
 		public override void decay()
 		{
-			EPS = Math.Exp(-sw.ElapsedMilliseconds / (MAX_MILLISECONDS / 4));
+			EPS = Math.Exp(-TimeSpan.FromTicks(sw.Elapsed.Ticks).TotalMilliseconds / (MAX_MILLISECONDS / 4));
 		}
 	}
 
@@ -136,14 +165,17 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 
 		public Stopwatch sw = new Stopwatch();
 		public double EPS = 0.5;
-		public float MAX_MILLISECONDS = 1500;
+		public float MAX_MILLISECONDS = 500;
 		public int MAX_SIMULATION_DEPTH = 5;
 		public double UCB1_C;
 		public string TREE_POLICY;
 		public string AGENT_NAME = "default";
 
-		List<List<float>> GameStateEncodes;
-		private Dictionary<string, List<double>> CardClassScoreWeights;
+		public List<List<float>> GameStateEncodesEnd;
+		public List<List<float>> GameStateEncodes;
+		public Dictionary<string, List<double>> CardClassScoreWeights;
+		public bool write = false;
+		public bool test = false;
 
 		public void OnTimedEvent(object source, ElapsedEventArgs e)
 		{
@@ -155,21 +187,26 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 			timeIsOver = false;
 			timer.Start();
 			sw.Restart();
+			GameStateEncodes.Add(GameStateEncoding.GetEncoding(poGame, poGame.CurrentPlayer.PlayerId));
 			Controller player = poGame.CurrentPlayer;
 			// Implement a simple Mulligan Rule
 			if (player.MulliganState == Mulligan.INPUT)
 			{
-				List<int> mulligan = new CustomScore().MulliganRule().Invoke(player.Choice.Choices.Select(p => poGame.getGame().IdEntityDic[p]).ToList());
+				List<int> mulligan = new GameStateEncoding().MulliganRule().Invoke(player.Choice.Choices.Select(p => poGame.getGame().IdEntityDic[p]).ToList());
 				return ChooseTask.Mulligan(player, mulligan);
 			}
-
-			return GetMoveMCTS(poGame);
+			PlayerTask task = GetMoveMCTS(poGame);
+			if(task.PlayerTaskType != PlayerTaskType.END_TURN)
+			{
+				GameStateEncodesEnd.Add(GameStateEncoding.GetEncoding(poGame, poGame.CurrentPlayer.PlayerId));
+			}
+			return task;
 		}
 
 
 		public virtual void decay()
 		{
-			EPS = Math.Exp(-sw.ElapsedMilliseconds / MAX_MILLISECONDS);
+			EPS = Math.Exp(-TimeSpan.FromTicks(sw.Elapsed.Ticks).TotalMilliseconds / MAX_MILLISECONDS);
 		}
 
 
@@ -341,39 +378,11 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 			timer.Enabled = true;
 
 			setOptions();
-
-			GameStateEncodes = new List<List<float>>();
-			CardClassScoreWeights = new Dictionary<string, List<double>>();
-
-			List<double> weights;
-			weights = new List<double>() {0.3396823227350791, 0.4755695757161211, 0.6315254752527363, 0.4734719464388754, -0.13342819577228687, 0.4880292751372225, 0.4546600122453255, -0.09655686815963457, 0.22444652242475907,
-0.19958732533079662, -0.17036348526647713, -0.15105786100949445, -0.8577670378368388, -0.28672597345950523, -0.5220220209814568, 0.007159377000021262, -0.38789345571895467, -0.1283321978508957, -0.4730444625436555,
--0.10962017160626067, 0.648797000536877, -0.6197835909878951, -0.09484805666235381, -0.15806698813254624, 0.03653132581369362, -0.3760426624619679};
-			CardClassScoreWeights.Add("MAGE", weights);
-
-			weights = new List<double>() { 2.6657967031741223, 0.6172282932925817, 0.5267734627229559, 0.3845890126246053, -0.05651094886014054, 0.4235874880590937, 0.40590328154826616, 0.13045532836374601, 0.3227626928830109, 0.0013320505860923888, -0.026905224180923823, -0.12896842177994336, -0.17339781765457415, -2.537035435940092, -0.6444615887697005, -0.2150859695275532, -0.30035560311314363, -0.08332442555726452, -0.5248060718900047, -0.16630457818423394, 0.5487155310531595, -0.21270732650522323, -0.25718575866040094, 0.005845334069150769, 0.02459113277955093, 0.14781638952600942 };
-			CardClassScoreWeights.Add("PALADIN", weights);
-
-			weights = new List<double>() {2.108254812618058, 0.6256819258143028, -0.21972786839670158, 0.11695877393257469, 0.13971959985135304, 0.4647307286829961, 0.3451117139527672, -0.4515953027724709, 0.27874213066988307,
-0.0612268289119284, 0.2444840560427164, -0.009243188007072415, -0.6285073497816541, -2.0742859221806595, -0.6376497639879554, 0.03982635363840739, -0.450726429902333, -0.19786737194618953, -0.5446075216627354, -0.04207827000472267, 2.0914957006005803, -0.5866838669347538, -0.1609333012132106, -0.20116804674688515, 0.3902093088311108, 0.08711608204928868};
-			CardClassScoreWeights.Add("ROGUE", weights);
-
-			weights = new List<double>() { 2.1009877294840034, 0.5871437352243997, 0.12991498581449737, 0.45608217731438716, -0.030739199730632275, 0.45068848120459415, 0.3276483798250836, -1.4679626602161622, 0.4618489919070022, 0.11366472294529824, 0.12179101469814593, -0.23180098517182537, -0.39853818287066883, -2.1079112766917323, -0.6217759542112327, 0.18233187125024847, -0.7997254282096468, 0.01284499905586331, -0.4731496751070926, -0.08733492413557076, -2.808511602548035, -0.24739222263126154, -0.24111417711725536, -0.3275898154533169, 0.19010422386652226, 0.02403775889384799 };
-			CardClassScoreWeights.Add("SHAMAN", weights);
-
-			weights = new List<double>() {-1.4287179253776663, 0.4326959098996448, 0.1047511018602149, 0.17594329650466567, -0.06921212031170057, 0.49609267849694666, 0.793744933165348, -1.0842463494240322, -0.919799035058143,
--0.1516633391465757, -0.4104235208663316, 0.34515065165163444, -0.12414920567443831, 1.3402820139310152, -0.7017375269392632, -1.2838838813284599, -0.9572873647942951, -0.01581083452335453, -0.38196481235139096, 0.21999190978150235, 1.788962342289077, -0.4985101151314515, -0.26627739179661614, -0.5524113721880164, 0.22232892366034218, -0.6321553673250434};
-			CardClassScoreWeights.Add("WARLOCK", weights);
-
-			weights = new List<double>() { 1.8050278085507863, 0.5993997150677683, -0.05743831873331757, 0.4842651998954194, -0.036644133696711156, 0.5639806682411649, 0.36182956007060973, 2.084307096138654, -0.0063968642256147104, -0.022303631616641447, 0.17157618893986473, -0.19397182835333096, -0.9149225669162552, -1.9234300753289446, -0.6347653103164637, -0.14779504336526836, -0.40072919206987917, -0.11960767888127061, -0.5897291624755794, -0.05857769488665897, 0.9529889748884189, -0.5882732419814911, -0.2647173934518952, 0.03945145315509562, 0.3909444018952406, -0.041700524148903635 };
-			CardClassScoreWeights.Add("WARRIOR", weights);
 		}
 
 		public override void InitializeGame() { }
 		public override void FinalizeGame(Game game, Controller myPlayer)
 		{
-			bool write = false;
-			bool test = false;
 			Console.WriteLine(AGENT_NAME + " Avg. Simulations: " + totalVisitedNum / numMoves);
 			if (write)
 			{
@@ -384,7 +393,6 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 				{
 					GameStateEncodes[i].Add(GameResult);
 					GameStateEncodes[i].Add(GameResultHp);
-					GameStateEncodes[i].Add(GameResultHp * (GameStateEncodes[i][0] + 1) / 11.0f);
 					GameStateEncodes[i].Add(GameResultHp * (i + 1.0f) / GameStateEncodes.Count);
 				}
 
@@ -507,7 +515,7 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 		public List<float> CreateEncoding()
 		{
 			//Encoding.Add(HeroClassId);
-			Encoding.Add(HeroBaseMana);
+			//Encoding.Add(HeroBaseMana);
 			Encoding.Add(HeroHp);
 			Encoding.Add(HeroArmor);
 			Encoding.Add(BoardZone.Count);
@@ -524,7 +532,7 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 			//Encoding.Add(MinionTotHealthImmune);
 
 			//Encoding.Add(OpHeroClassId);
-			Encoding.Add(OpHeroBaseMana);
+			//Encoding.Add(OpHeroBaseMana);
 			Encoding.Add(OpHeroHp);
 			Encoding.Add(OpHeroArmor);
 			Encoding.Add(OpBoardZone.Count);
@@ -556,6 +564,52 @@ namespace SabberStoneBasicAI.AIAgents.MCTSHans
 			return score;
 		}
 
+
+		public override Func<List<IPlayable>, List<int>> MulliganRule()
+		{
+			return p => p.Where(t => t.Cost > 3).Select(t => t.Id).ToList();
+		}
+	}
+
+	public class MyScore : Score.Score
+	{
+		public override int Rate()
+		{
+			if (OpHeroHp < 1)
+				return Int32.MaxValue;
+
+			if (HeroHp < 1)
+				return Int32.MinValue;
+
+			int result = 0;
+
+			if (OpMinionTotHealthTaunt > 0)
+				result += OpMinionTotHealthTaunt * -100;
+
+			if (OpBoardZone.Count == 0 && BoardZone.Count > 0)
+				result += 1000;
+
+			if (OpMinionTotHealthTaunt > 0)
+				result += MinionTotHealthTaunt * -500;
+
+			result += (BoardZone.Count - OpBoardZone.Count) * 10;
+
+			result += MinionTotAtk * 10;
+
+			result += (HeroHp - OpHeroHp) * 10;
+
+			result += (MinionTotHealth - OpMinionTotHealth) * 10;
+
+			result += (MinionTotAtk - OpMinionTotAtk) * 10;
+
+			result += (MinionTotHealthTaunt - OpMinionTotHealthTaunt) * 25;
+
+			result += (BoardZone.Count - OpBoardZone.Count) * 5;
+
+			//result += Controller.RemainingMana * 5;
+
+			return result;
+		}
 
 		public override Func<List<IPlayable>, List<int>> MulliganRule()
 		{

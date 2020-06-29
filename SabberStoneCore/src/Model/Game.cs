@@ -929,8 +929,8 @@ namespace SabberStoneCore.Model
 			if (GhostlyCards.Count > 0)
 			{
 				foreach (int id in GhostlyCards)
-				{
-					IPlayable entity = IdEntityDic[id];
+				{ 
+					IPlayable entity = IdEntityDic[id]; //TODO: HERE IS THE BUG
 					if (entity.Zone.Type != Enums.Zone.HAND) continue;
 					entity.Controller.SetasideZone.Add(entity.Zone.Remove(entity));
 				}
