@@ -68,14 +68,19 @@ namespace SabberStoneBasicAI.AIAgents.Examples
 		private long totalMoves;
 		private long maxMilliseconds;
 
+		private long totalOptions;
+		private long maxOptions;
+
 		public override void FinalizeAgent()
 		{
 		}
 
 		public override void FinalizeGame(SabberStoneCore.Model.Game game, Controller controllers)
 		{
-			Console.WriteLine(" Avg. Milliseconds: " + totalMilliseconds / totalMoves);
-			Console.WriteLine(" Max. Milliseconds: " + maxMilliseconds);
+			//Console.WriteLine(" Avg. Milliseconds: " + totalMilliseconds / totalMoves);
+			//Console.WriteLine(" Max. Milliseconds: " + maxMilliseconds);
+			//Console.WriteLine(" Avg. Options: " + totalOptions / totalMoves);
+			//Console.WriteLine(" Max. Options: " + maxOptions);
 		}
 
 		public override PlayerTask GetMove(POGame game)
@@ -99,10 +104,13 @@ namespace SabberStoneBasicAI.AIAgents.Examples
 			maxMilliseconds = maxMilliseconds > sw.ElapsedMilliseconds ? maxMilliseconds : sw.ElapsedMilliseconds;
 			totalMilliseconds += sw.ElapsedMilliseconds;
 			totalMoves++;
+			maxOptions = maxOptions > optcount ? maxOptions : optcount;
+			totalOptions += optcount;
 			return returnValue;
 
 			KeyValuePair<PlayerTask, int> score(KeyValuePair<PlayerTask, POGame> state, int player_id, int max_depth = 3)
 			{
+				state = new KeyValuePair<PlayerTask, POGame>(state.Key, state.Value.getCopy());
 				int max_score = int.MinValue;
 				if (max_depth > 0 && state.Value.CurrentPlayer.PlayerId == player_id)
 				{

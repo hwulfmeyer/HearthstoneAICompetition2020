@@ -17,13 +17,11 @@ namespace SabberStoneBasicAI.AIAgents.Learning
 	{
 		private Random Rnd = new Random();
 		List<List<float>> GameStateEncodes = new List<List<float>>();
-		List<List<float>> GameStateEncodesEnd = new List<List<float>>();
 
 		public override void InitializeAgent()
 		{
 			Rnd = new Random();
 			GameStateEncodes = new List<List<float>>();
-			GameStateEncodesEnd = new List<List<float>>();
 		}
 
 		public override void FinalizeAgent()
@@ -33,8 +31,8 @@ namespace SabberStoneBasicAI.AIAgents.Learning
 
 		public override void FinalizeGame(Game game, Controller myPlayer)
 		{
-			bool write = true;
-			bool test = true;
+			bool write = false;
+			bool test = false;
 			int GameResult = myPlayer.PlayState == PlayState.WON ? 1 : myPlayer.PlayState == PlayState.TIED ? 0 : -1;
 			int GameResultHp = myPlayer.PlayState == PlayState.WON ? myPlayer.Hero.Health : myPlayer.PlayState == PlayState.TIED ? 0 : -myPlayer.Opponent.Hero.Health;
 			string folder = "F:\\data\\" + (test ? "test" : "train") + "\\";
@@ -42,23 +40,36 @@ namespace SabberStoneBasicAI.AIAgents.Learning
 			{
 				for (int i = 0; i < GameStateEncodes.Count; i++)
 				{
-					GameStateEncodes[i].Add(GameResult);
-					GameStateEncodes[i].Add(GameResultHp);
-					GameStateEncodes[i].Add(GameResultHp * (i + 1.0f) / GameStateEncodes.Count);
-					GameStateEncodes[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodes.Count, 2)));
-					GameStateEncodes[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodes.Count, 3)));
-					GameStateEncodes[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodes.Count, 4)));
-					GameStateEncodes[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodes.Count, 5)));
+					double power = 1.0;
+					if (GameStateEncodes[i][0] <= 3.0f) power = 1.6; //early
+					if (GameStateEncodes[i][0] <= 7.0f && GameStateEncodes[i][0] >= 4.0f) power = 2; //mid
+					if (GameStateEncodes[i][0] >= 8.0f) power = 2.4; //late
+
+					GameStateEncodes[i].Add((float)(1000.0 * GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodes.Count, power)));
+					/*GameStateEncodes[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodes.Count, 1)));	 //-18
+					GameStateEncodes[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodes.Count, 1.2))); //-17
+					GameStateEncodes[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodes.Count, 1.4))); //-16
+					GameStateEncodes[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodes.Count, 1.6))); //-15 //early
+					GameStateEncodes[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodes.Count, 1.8))); //-14 
+					GameStateEncodes[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodes.Count, 2)));   //-13 //mid
+					GameStateEncodes[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodes.Count, 2.2))); //-12
+					GameStateEncodes[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodes.Count, 2.4))); //-11 //late
+					GameStateEncodes[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodes.Count, 2.6))); //-10
+					GameStateEncodes[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodes.Count, 2.8))); //-9
+					GameStateEncodes[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodes.Count, 3)));	 //-8
+					GameStateEncodes[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodes.Count, 3.2))); //-7
+					GameStateEncodes[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodes.Count, 3.4))); //-6
+					GameStateEncodes[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodes.Count, 3.6))); //-5
+					GameStateEncodes[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodes.Count, 3.8))); //-4
+					GameStateEncodes[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodes.Count, 4)));   //-3
+					GameStateEncodes[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodes.Count, 4.2))); //-2
+					GameStateEncodes[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodes.Count, 4.4))); //-1*/
 				}
 
 				List<List<float>> GameStateEncodesEarly = GameStateEncodes.Where(x => x[0] <= 3.0f).ToList();
 				List<List<float>> GameStateEncodesMid = GameStateEncodes.Where(x => x[0] <= 7.0f && x[0] >= 4.0f).ToList();
 				List<List<float>> GameStateEncodesLate = GameStateEncodes.Where(x => x[0] >= 8.0f).ToList();
 
-				foreach (List<float> record in GameStateEncodes)
-				{
-					record.RemoveAt(0);
-				}
 				foreach (List<float> record in GameStateEncodesEarly)
 				{
 					record.RemoveAt(0);
@@ -75,34 +86,6 @@ namespace SabberStoneBasicAI.AIAgents.Learning
 				}
 
 				bool success = false;
-				while (!success)
-				{
-					try
-					{
-						using (FileStream fileStream = new FileStream(folder + "random_" + myPlayer.HeroClass.ToString() + ".csv", FileMode.Append, FileAccess.Write, FileShare.None))
-						using (var writer = new StreamWriter(fileStream))
-						{
-							using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-							{
-								foreach (List<float> record in GameStateEncodes)
-								{
-									foreach (float field in record)
-									{
-										csv.WriteField(field);
-									}
-
-									csv.NextRecord();
-								}
-								success = true;
-							}
-						}
-					}
-					catch
-					{
-
-					}
-				}
-				success = false;
 				while (!success)
 				{
 					try
@@ -186,385 +169,9 @@ namespace SabberStoneBasicAI.AIAgents.Learning
 
 					}
 				}
-
-				success = false;
-				while (!success)
-				{
-					try
-					{
-						using (FileStream fileStream = new FileStream(folder + "random.csv", FileMode.Append, FileAccess.Write, FileShare.None))
-						using (var writer = new StreamWriter(fileStream))
-						{
-							using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-							{
-								foreach (List<float> record in GameStateEncodes)
-								{
-									foreach (float field in record)
-									{
-										csv.WriteField(field);
-									}
-
-									csv.NextRecord();
-								}
-								success = true;
-							}
-						}
-					}
-					catch
-					{
-
-					}
-				}
-				success = false;
-				while (!success)
-				{
-					try
-					{
-						using (FileStream fileStream = new FileStream(folder + "random__early.csv", FileMode.Append, FileAccess.Write, FileShare.None))
-						using (var writer = new StreamWriter(fileStream))
-						{
-							using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-							{
-								foreach (List<float> record in GameStateEncodesEarly)
-								{
-									foreach (float field in record)
-									{
-										csv.WriteField(field);
-									}
-
-									csv.NextRecord();
-								}
-								success = true;
-							}
-						}
-					}
-					catch
-					{
-
-					}
-				}
-				success = false;
-				while (!success)
-				{
-					try
-					{
-						using (FileStream fileStream = new FileStream(folder + "random__mid.csv", FileMode.Append, FileAccess.Write, FileShare.None))
-						using (var writer = new StreamWriter(fileStream))
-						{
-							using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-							{
-								foreach (List<float> record in GameStateEncodesMid)
-								{
-									foreach (float field in record)
-									{
-										csv.WriteField(field);
-									}
-
-									csv.NextRecord();
-								}
-								success = true;
-							}
-						}
-					}
-					catch
-					{
-
-					}
-				}
-				success = false;
-				while (!success)
-				{
-					try
-					{
-						using (FileStream fileStream = new FileStream(folder + "random__late.csv", FileMode.Append, FileAccess.Write, FileShare.None))
-						using (var writer = new StreamWriter(fileStream))
-						{
-							using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-							{
-								foreach (List<float> record in GameStateEncodesLate)
-								{
-									foreach (float field in record)
-									{
-										csv.WriteField(field);
-									}
-
-									csv.NextRecord();
-								}
-								success = true;
-							}
-						}
-					}
-					catch
-					{
-
-					}
-				}
-			}
-			if (write)
-			{
-				for (int i = 0; i < GameStateEncodesEnd.Count; i++)
-				{
-					GameStateEncodesEnd[i].Add(GameResult);
-					GameStateEncodesEnd[i].Add(GameResultHp);
-					GameStateEncodesEnd[i].Add(GameResultHp * (i + 1.0f) / GameStateEncodesEnd.Count);
-					GameStateEncodesEnd[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodesEnd.Count, 2)));
-					GameStateEncodesEnd[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodesEnd.Count, 3)));
-					GameStateEncodesEnd[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodesEnd.Count, 4)));
-					GameStateEncodesEnd[i].Add((float)(GameResultHp * Math.Pow((i + 1.0f) / GameStateEncodesEnd.Count, 5)));
-				}
-
-				List<List<float>> GameStateEncodesEarly = GameStateEncodesEnd.Where(x => x[0] <= 3.0f).ToList();
-				List<List<float>> GameStateEncodesMid = GameStateEncodesEnd.Where(x => x[0] <= 7.0f && x[0] >= 4.0f).ToList();
-				List<List<float>> GameStateEncodesLate = GameStateEncodesEnd.Where(x => x[0] >= 8.0f).ToList();
-
-				foreach (List<float> record in GameStateEncodesEnd)
-				{
-					record.RemoveAt(0);
-				}
-				foreach (List<float> record in GameStateEncodesEarly)
-				{
-					record.RemoveAt(0);
-				}
-
-				foreach (List<float> record in GameStateEncodesMid)
-				{
-					record.RemoveAt(0);
-				}
-
-				foreach (List<float> record in GameStateEncodesLate)
-				{
-					record.RemoveAt(0);
-				}
-
-				bool success = false;
-				while (!success)
-				{
-					try
-					{
-						using (FileStream fileStream = new FileStream(folder + "random_" + myPlayer.HeroClass.ToString() + "_end.csv", FileMode.Append, FileAccess.Write, FileShare.None))
-						using (var writer = new StreamWriter(fileStream))
-						{
-							using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-							{
-								foreach (List<float> record in GameStateEncodesEnd)
-								{
-									foreach (float field in record)
-									{
-										csv.WriteField(field);
-									}
-
-									csv.NextRecord();
-								}
-								success = true;
-							}
-						}
-					}
-					catch
-					{
-
-					}
-				}
-				success = false;
-				while (!success)
-				{
-					try
-					{
-						using (FileStream fileStream = new FileStream(folder + "random__early_" + myPlayer.HeroClass.ToString() + "_end.csv", FileMode.Append, FileAccess.Write, FileShare.None))
-						using (var writer = new StreamWriter(fileStream))
-						{
-							using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-							{
-								foreach (List<float> record in GameStateEncodesEarly)
-								{
-									foreach (float field in record)
-									{
-										csv.WriteField(field);
-									}
-
-									csv.NextRecord();
-								}
-								success = true;
-							}
-						}
-					}
-					catch
-					{
-
-					}
-				}
-				success = false;
-				while (!success)
-				{
-					try
-					{
-						using (FileStream fileStream = new FileStream(folder + "random__mid_" + myPlayer.HeroClass.ToString() + "_end.csv", FileMode.Append, FileAccess.Write, FileShare.None))
-						using (var writer = new StreamWriter(fileStream))
-						{
-							using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-							{
-								foreach (List<float> record in GameStateEncodesMid)
-								{
-									foreach (float field in record)
-									{
-										csv.WriteField(field);
-									}
-
-									csv.NextRecord();
-								}
-								success = true;
-							}
-						}
-					}
-					catch
-					{
-
-					}
-				}
-				success = false;
-				while (!success)
-				{
-					try
-					{
-						using (FileStream fileStream = new FileStream(folder + "random__late_" + myPlayer.HeroClass.ToString() + "_end.csv", FileMode.Append, FileAccess.Write, FileShare.None))
-						using (var writer = new StreamWriter(fileStream))
-						{
-							using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-							{
-								foreach (List<float> record in GameStateEncodesLate)
-								{
-									foreach (float field in record)
-									{
-										csv.WriteField(field);
-									}
-
-									csv.NextRecord();
-								}
-								success = true;
-							}
-						}
-					}
-					catch
-					{
-
-					}
-				}
-
-				success = false;
-				while (!success)
-				{
-					try
-					{
-						using (FileStream fileStream = new FileStream(folder + "random_end.csv", FileMode.Append, FileAccess.Write, FileShare.None))
-						using (var writer = new StreamWriter(fileStream))
-						{
-							using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-							{
-								foreach (List<float> record in GameStateEncodesEnd)
-								{
-									foreach (float field in record)
-									{
-										csv.WriteField(field);
-									}
-
-									csv.NextRecord();
-								}
-								success = true;
-							}
-						}
-					}
-					catch
-					{
-
-					}
-				}
-				success = false;
-				while (!success)
-				{
-					try
-					{
-						using (FileStream fileStream = new FileStream(folder + "random__early_end.csv", FileMode.Append, FileAccess.Write, FileShare.None))
-						using (var writer = new StreamWriter(fileStream))
-						{
-							using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-							{
-								foreach (List<float> record in GameStateEncodesEarly)
-								{
-									foreach (float field in record)
-									{
-										csv.WriteField(field);
-									}
-
-									csv.NextRecord();
-								}
-								success = true;
-							}
-						}
-					}
-					catch
-					{
-
-					}
-				}
-				success = false;
-				while (!success)
-				{
-					try
-					{
-						using (FileStream fileStream = new FileStream(folder + "random__mid_end.csv", FileMode.Append, FileAccess.Write, FileShare.None))
-						using (var writer = new StreamWriter(fileStream))
-						{
-							using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-							{
-								foreach (List<float> record in GameStateEncodesMid)
-								{
-									foreach (float field in record)
-									{
-										csv.WriteField(field);
-									}
-
-									csv.NextRecord();
-								}
-								success = true;
-							}
-						}
-					}
-					catch
-					{
-
-					}
-				}
-				success = false;
-				while (!success)
-				{
-					try
-					{
-						using (FileStream fileStream = new FileStream(folder + "random__late_end.csv", FileMode.Append, FileAccess.Write, FileShare.None))
-						using (var writer = new StreamWriter(fileStream))
-						{
-							using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-							{
-								foreach (List<float> record in GameStateEncodesLate)
-								{
-									foreach (float field in record)
-									{
-										csv.WriteField(field);
-									}
-
-									csv.NextRecord();
-								}
-								success = true;
-							}
-						}
-					}
-					catch
-					{
-
-					}
-				}
 			}
 
 			GameStateEncodes = new List<List<float>>();
-			GameStateEncodesEnd = new List<List<float>>();
 		}
 
 		public override PlayerTask GetMove(POGame poGame)
@@ -583,10 +190,6 @@ namespace SabberStoneBasicAI.AIAgents.Learning
 			List<PlayerTask> options = poGame.CurrentPlayer.Options();
 			PlayerTask task = options[Rnd.Next(options.Count)];
 
-			if (task.PlayerTaskType != PlayerTaskType.END_TURN)
-			{
-				GameStateEncodesEnd.Add(GameStateEncoding.GetEncoding(poGame, poGame.CurrentPlayer.PlayerId));
-			}
 			return task;
 		}
 
@@ -655,7 +258,7 @@ namespace SabberStoneBasicAI.AIAgents.Learning
 			Encoding.Add(MinionTotHealthDivineShield);
 			Encoding.Add(MinionFrozenTotAtk);
 			Encoding.Add(MinionTotHealthStealth);
-			Encoding.Add(MinionTotHealthImmune);
+			//Encoding.Add(MinionTotHealthImmune);
 
 			//Encoding.Add(OpHeroClassId);
 			//Encoding.Add(OpHeroBaseMana);
@@ -672,10 +275,7 @@ namespace SabberStoneBasicAI.AIAgents.Learning
 			Encoding.Add(OpMinionTotHealthDivineShield);
 			Encoding.Add(OpMinionFrozenTotAtk);
 			Encoding.Add(OpMinionTotHealthStealth);
-			Encoding.Add(OpMinionTotHealthImmune);
-
-
-
+			//Encoding.Add(OpMinionTotHealthImmune);
 
 			return Encoding;
 		}

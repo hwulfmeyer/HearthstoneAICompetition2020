@@ -6,66 +6,23 @@ using SabberStoneCore.Tasks.PlayerTasks;
 using SabberStoneCore.Model.Entities;
 using SabberStoneCore.Enums;
 using System.Timers;
+using System.IO;
+using CsvHelper;
+using System.Globalization;
+using SabberStoneCore.Model;
+using System.Transactions;
 
 namespace SabberStoneBasicAI.AIAgents.Learning
 {
-	class CustomScore : Score.Score
+	class DynamicLookaheadOld : AbstractAgent
 	{
-		readonly double[] scaling = new double[] {
-				21.5,
-				33.6,
-				41.1,
-				19.4,
-				54,
-				60.5,
-				88.5,
-				84.7
-		};
+		public static Timer timer;
+		public bool timeIsOver = false;
+		private long totalMoves;
+		private long totalScore;
+		private long maxScore;
 
-		public override int Rate()
-		{
-			if (OpHeroHp < 1)
-				return Int32.MaxValue;
-
-			if (HeroHp < 1)
-				return Int32.MinValue;
-
-			double score = 0.0;
-
-			score += scaling[0] * HeroHp;
-			score -= scaling[1] * OpHeroHp;
-
-			score += scaling[2] * BoardZone.Count;
-			score -= scaling[3] * OpBoardZone.Count;
-
-			foreach (Minion boardZoneEntry in BoardZone)
-			{
-				score += scaling[4] * boardZoneEntry.Health;
-				score += scaling[5] * boardZoneEntry.AttackDamage;
-			}
-
-			foreach (Minion boardZoneEntry in OpBoardZone)
-			{
-				score -= scaling[6] * boardZoneEntry.Health;
-				score -= scaling[7] * boardZoneEntry.AttackDamage;
-			}
-
-			return (int)Math.Round(score);
-		}
-
-		public override Func<List<IPlayable>, List<int>> MulliganRule()
-		{
-			return p => p.Where(t => t.Cost > 3).Select(t => t.Id).ToList();
-		}
-	}
-
-
-	class DynamicLookaheadv0 : AbstractAgent
-	{
-		private static Timer timer;
-		private bool timeIsOver = false;
-
-		private void OnTimedEvent(object source, ElapsedEventArgs e)
+		public void OnTimedEvent(object source, ElapsedEventArgs e)
 		{
 			timeIsOver = true;
 		}
@@ -75,8 +32,10 @@ namespace SabberStoneBasicAI.AIAgents.Learning
 		{
 		}
 
-		public override void FinalizeGame(SabberStoneCore.Model.Game game, Controller controllers)
+		public override void FinalizeGame(Game game, Controller myPlayer)
 		{
+			Console.WriteLine(" Avg. Score: " + totalScore / totalMoves);
+			Console.WriteLine(" Max. Score: " + maxScore);
 		}
 
 		public override PlayerTask GetMove(POGame game)
@@ -87,7 +46,7 @@ namespace SabberStoneBasicAI.AIAgents.Learning
 			// Implement a simple Mulligan Rule
 			if (player.MulliganState == Mulligan.INPUT)
 			{
-				List<int> mulligan = new CustomScore().MulliganRule().Invoke(player.Choice.Choices.Select(p => game.getGame().IdEntityDic[p]).ToList());
+				List<int> mulligan = new MyScore().MulliganRule().Invoke(player.Choice.Choices.Select(p => game.getGame().IdEntityDic[p]).ToList());
 				return ChooseTask.Mulligan(player, mulligan);
 			}
 
@@ -95,8 +54,14 @@ namespace SabberStoneBasicAI.AIAgents.Learning
 			IEnumerable<KeyValuePair<PlayerTask, POGame>> validOpts = game.Simulate(player.Options()).Where(x => x.Value != null);
 			int optcount = validOpts.Count();
 			int maxDepth = optcount >= 5 ? (optcount >= 25 ? 1 : 2) : 3;
-
-			if (validOpts.Any()) return validOpts.Select(x => score(x, player.PlayerId, maxDepth)).OrderBy(x => x.Value).Last().Key;
+			if (validOpts.Any())
+			{
+				KeyValuePair<PlayerTask, int> winnerTask = validOpts.Select(x => score(x, player.PlayerId, maxDepth)).OrderBy(x => x.Value).Last();
+				totalMoves++;
+				maxScore = maxScore > winnerTask.Value ? maxScore : winnerTask.Value;
+				totalScore += winnerTask.Value;
+				return winnerTask.Key;
+			}
 			else return player.Options().First(x => x.PlayerTaskType == PlayerTaskType.END_TURN);
 
 			KeyValuePair<PlayerTask, int> score(KeyValuePair<PlayerTask, POGame> state, int player_id, int max_depth = 3)
@@ -117,12 +82,6 @@ namespace SabberStoneBasicAI.AIAgents.Learning
 			}
 		}
 
-		private static int Score(POGame state, int playerId)
-		{
-			Controller p = state.CurrentPlayer.PlayerId == playerId ? state.CurrentPlayer : state.CurrentOpponent;
-			return new CustomScore { Controller = p }.Rate();
-		}
-
 		public override void InitializeAgent()
 		{
 			timer = new System.Timers.Timer
@@ -134,8 +93,61 @@ namespace SabberStoneBasicAI.AIAgents.Learning
 			timer.Enabled = true;
 		}
 
+
 		public override void InitializeGame()
 		{
+		}
+
+		private int Score(POGame state, int playerId)
+		{
+			Controller p = state.CurrentPlayer.PlayerId == playerId ? state.CurrentPlayer : state.CurrentOpponent;
+			return new MyScore { Controller = p }.Rate();
+		}
+
+		public class MyScore : Score.Score
+		{
+			public override int Rate()
+			{
+				if (OpHeroHp < 1)
+					return Int32.MaxValue;
+
+				if (HeroHp < 1)
+					return Int32.MinValue;
+
+				int result = 0;
+
+				if (OpMinionTotHealthTaunt > 0)
+					result += OpMinionTotHealthTaunt * -100;
+
+				if (OpBoardZone.Count == 0 && BoardZone.Count > 0)
+					result += 1000;
+
+				if (OpMinionTotHealthTaunt > 0)
+					result += MinionTotHealthTaunt * -500;
+
+				result += (BoardZone.Count - OpBoardZone.Count) * 10;
+
+				result += MinionTotAtk * 10;
+
+				result += (HeroHp - OpHeroHp) * 10;
+
+				result += (MinionTotHealth - OpMinionTotHealth) * 10;
+
+				result += (MinionTotAtk - OpMinionTotAtk) * 10;
+
+				result += (MinionTotHealthTaunt - OpMinionTotHealthTaunt) * 25;
+
+				result += (BoardZone.Count - OpBoardZone.Count) * 5;
+
+				//result += Controller.RemainingMana * 5;
+
+				return result;
+			}
+
+			public override Func<List<IPlayable>, List<int>> MulliganRule()
+			{
+				return p => p.Where(t => t.Cost > 3).Select(t => t.Id).ToList();
+			}
 		}
 	}
 }
